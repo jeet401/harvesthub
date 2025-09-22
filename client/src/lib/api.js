@@ -32,6 +32,7 @@ export const api = {
   // Products
   getProducts: (params) => request(`/api/products${params ? '?' + new URLSearchParams(params).toString() : ''}`),
   getProduct: (id) => request(`/api/products/${id}`),
+  getCategories: () => request('/api/products/categories'),
   
   // Cart
   getCart: () => request('/api/cart'),

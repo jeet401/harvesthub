@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { api } from '../../lib/api.js'
+import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Button } from '../../components/ui/button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card.jsx'
 import { User, Tractor, Settings, Eye, EyeOff } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [params] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -53,7 +54,7 @@ export default function Login() {
     setError('')
     
     try {
-      const response = await api.login({ email, password, role })
+      const response = await login({ email, password, role })
       console.log('Login successful:', response)
       
       // Navigate based on the actual user role returned from server
@@ -182,4 +183,4 @@ export default function Login() {
   )
 }
 
-export default Login
+

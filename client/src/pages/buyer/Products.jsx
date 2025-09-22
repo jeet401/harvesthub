@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
+import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Card, CardContent } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 
 export default function Products() {
+  const { user } = useAuth()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [searchParams] = useSearchParams()
+  const [cartLoading, setCartLoading] = useState(null)
 
   useEffect(() => {
     fetchProducts()
@@ -25,30 +28,13 @@ export default function Products() {
       if (searchTerm) params.search = searchTerm
       if (selectedCategory) params.category = selectedCategory
       
-      // For now, always use mock data for testing
-      setProducts([
-        { _id: 1, title: 'Fresh Tomatoes', price: 80, unit: 'kg', images: ['/fresh-vegetables-tomatoes-carrots-onions.png'], sellerId: { email: 'john@example.com' }, categoryId: { name: 'Vegetables' } },
-        { _id: 2, title: 'Organic Apples', price: 120, unit: 'kg', images: ['/fresh-colorful-fruits-apples-oranges-bananas.png'], sellerId: { email: 'jane@example.com' }, categoryId: { name: 'Fruits' } },
-        { _id: 3, title: 'Wheat Seeds', price: 45, unit: 'kg', images: ['/various-seeds-packets-wheat-rice-vegetable-seeds.png'], sellerId: { email: 'mike@example.com' }, categoryId: { name: 'Seeds' } },
-        { _id: 4, title: 'Organic Fertilizer', price: 200, unit: 'kg', images: ['/organic-fertilizer-bags-compost-natural-farming.png'], sellerId: { email: 'sarah@example.com' }, categoryId: { name: 'Fertilizers' } },
-        { _id: 5, title: 'Carrots', price: 60, unit: 'kg', images: ['/fresh-vegetables-tomatoes-carrots-onions.png'], sellerId: { email: 'david@example.com' }, categoryId: { name: 'Vegetables' } },
-        { _id: 6, title: 'Bananas', price: 40, unit: 'dozen', images: ['/fresh-colorful-fruits-apples-oranges-bananas.png'], sellerId: { email: 'lisa@example.com' }, categoryId: { name: 'Fruits' } },
-      ])
-      
-      // Uncomment this section when you want to use real API data
-      // const response = await api.getProducts(params)
-      // setProducts(response.products || [])
+      // Try to fetch real products from API
+      const response = await api.getProducts(params)
+      setProducts(response.products || [])
     } catch (error) {
       console.error('Products fetch error:', error)
-      // Fallback to mock data if API fails
-      setProducts([
-        { _id: 1, title: 'Fresh Tomatoes', price: 80, unit: 'kg', images: ['/fresh-vegetables-tomatoes-carrots-onions.png'], sellerId: { email: 'john@example.com' }, categoryId: { name: 'Vegetables' } },
-        { _id: 2, title: 'Organic Apples', price: 120, unit: 'kg', images: ['/fresh-colorful-fruits-apples-oranges-bananas.png'], sellerId: { email: 'jane@example.com' }, categoryId: { name: 'Fruits' } },
-        { _id: 3, title: 'Wheat Seeds', price: 45, unit: 'kg', images: ['/various-seeds-packets-wheat-rice-vegetable-seeds.png'], sellerId: { email: 'mike@example.com' }, categoryId: { name: 'Seeds' } },
-        { _id: 4, title: 'Organic Fertilizer', price: 200, unit: 'kg', images: ['/organic-fertilizer-bags-compost-natural-farming.png'], sellerId: { email: 'sarah@example.com' }, categoryId: { name: 'Fertilizers' } },
-        { _id: 5, title: 'Carrots', price: 60, unit: 'kg', images: ['/fresh-vegetables-tomatoes-carrots-onions.png'], sellerId: { email: 'david@example.com' }, categoryId: { name: 'Vegetables' } },
-        { _id: 6, title: 'Bananas', price: 40, unit: 'dozen', images: ['/fresh-colorful-fruits-apples-oranges-bananas.png'], sellerId: { email: 'lisa@example.com' }, categoryId: { name: 'Fruits' } },
-      ])
+      // Fallback to empty array if API fails
+      setProducts([])
     } finally {
       setIsLoading(false)
     }
@@ -56,14 +42,17 @@ export default function Products() {
 
   const fetchCategories = async () => {
     try {
+      const response = await api.getCategories()
+      setCategories(response.categories || [])
+    } catch (error) {
+      console.error('Categories fetch error:', error)
+      // Fallback to default categories
       setCategories([
         { id: 1, name: 'Fruits', type: 'fruits' },
         { id: 2, name: 'Vegetables', type: 'vegetables' },
         { id: 3, name: 'Seeds', type: 'seeds' },
         { id: 4, name: 'Fertilizers', type: 'fertilizers' },
       ])
-    } catch (error) {
-      console.error('Categories fetch error:', error)
     }
   }
 
@@ -74,12 +63,26 @@ export default function Products() {
   })
 
   const addToCart = async (productId) => {
+    if (!user) {
+      alert('Please login to add items to cart')
+      return
+    }
+
+    setCartLoading(productId)
     try {
       await api.addToCart({ productId, quantity: 1 })
       alert('Added to cart!')
     } catch (error) {
       console.error('Add to cart error:', error)
-      alert('Failed to add to cart. Please try again.')
+      if (error.message.includes('Product not found')) {
+        alert('This product is not available. Please try again later.')
+      } else if (error.message.includes('not authenticated') || error.message.includes('token')) {
+        alert('Please login again to add items to cart')
+      } else {
+        alert('Failed to add to cart. Please try again.')
+      }
+    } finally {
+      setCartLoading(null)
     }
   }
 
@@ -161,8 +164,9 @@ export default function Products() {
                 <Button
                   onClick={() => addToCart(product._id)}
                   size="sm"
+                  disabled={cartLoading === product._id || !user}
                 >
-                  Add to Cart
+                  {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
                 </Button>
               </div>
               <div className="text-xs text-muted-foreground border-t border-border pt-2">

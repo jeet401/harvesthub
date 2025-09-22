@@ -1,7 +1,8 @@
 import { Button } from '../components/ui/button.jsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card.jsx';
 import { ImageWithFallback } from '../components/ImageWithFallback.jsx';
-import { ArrowRight, Leaf, Users, TrendingUp, Shield, Star } from 'lucide-react';
+import { ArrowRight, Leaf, Users, TrendingUp, Shield, Star, User, Tractor } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Home() {
   const features = [
@@ -62,12 +63,18 @@ export default function Home() {
                 Join thousands of farmers and buyers who are already benefiting from direct, transparent trading
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-green-600 text-black font-semibold text-xl px-6 py-2">
-                  Start as Farmer
-                </Button>
-                <Button size="lg" className="bg-blue-600 text-black font-semibold text-xl px-6 py-2">
-                  Start as Buyer
-                </Button>
+                <Link to="/auth/sign-up?type=farmer">
+                  <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold text-xl px-8 py-3 flex items-center gap-2">
+                    <Tractor className="w-5 h-5" />
+                    Start as Farmer
+                  </Button>
+                </Link>
+                <Link to="/auth/sign-up?type=buyer">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold text-xl px-8 py-3 flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Start as Buyer
+                  </Button>
+                </Link>
               </div>
             </div>
             <div className="relative">

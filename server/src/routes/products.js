@@ -2,6 +2,17 @@ const router = require('express').Router();
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 
+// Get all categories
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await Category.find({}).sort({ name: 1 });
+    return res.json({ categories });
+  } catch (error) {
+    console.error('Categories fetch error:', error);
+    return res.status(500).json({ message: 'Failed to fetch categories' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const { category, search, limit = 20, page = 1 } = req.query;

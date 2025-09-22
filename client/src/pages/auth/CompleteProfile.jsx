@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api } from '../../lib/api.js'
+import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Button } from '../../components/ui/button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card.jsx'
 import { User, MapPin, Phone, CheckCircle } from 'lucide-react'
 
 export default function CompleteProfile() {
   const navigate = useNavigate()
+  const { completeProfile } = useAuth()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
@@ -34,7 +35,7 @@ export default function CompleteProfile() {
     }
 
     try {
-      const response = await api.completeProfile({ 
+      const response = await completeProfile({ 
         name: name.trim(), 
         phone: phone.trim(), 
         address: address.trim() 
@@ -169,5 +170,3 @@ export default function CompleteProfile() {
     </div>
   )
 }
-
-export default CompleteProfile

@@ -158,5 +158,3 @@ export default function SignUpSuccess() {
     </div>
   )
 }
-
-export default SignUpSuccess
