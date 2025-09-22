@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Button } from './ui/button.jsx'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, User, Tractor, Settings } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext.jsx'
 
 export function Navbar() {
@@ -22,17 +22,76 @@ export function Navbar() {
 
           {/* Right side: Auth buttons */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link to="/auth/login">
+            {/* Login Dropdown */}
+            <div className="relative group">
+              <Button variant="ghost" className="flex items-center gap-2">
                 {t.nav?.signIn || 'Login'}
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link to="/auth/sign-up?type=farmer">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </Button>
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-2">
+                  <Link 
+                    to="/auth/login?type=buyer" 
+                    className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-blue-600" />
+                    Login as Buyer
+                  </Link>
+                  <Link 
+                    to="/auth/login?type=farmer" 
+                    className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    <Tractor className="w-4 h-4 text-green-600" />
+                    Login as Farmer
+                  </Link>
+                  <Link 
+                    to="/auth/login?type=admin" 
+                    className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-red-600" />
+                    Admin Login
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Signup Dropdown */}
+            <div className="relative group">
+              <Button className="flex items-center gap-2">
                 {t.nav?.signUpFarmer || 'Get Started'}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </Button>
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-2">
+                  <Link 
+                    to="/auth/sign-up?type=buyer" 
+                    className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-blue-600" />
+                    Join as Buyer
+                  </Link>
+                  <Link 
+                    to="/auth/sign-up?type=farmer" 
+                    className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    <Tractor className="w-4 h-4 text-green-600" />
+                    Join as Farmer
+                  </Link>
+                  <div className="border-t border-gray-200 my-1"></div>
+                  <Link 
+                    to="/auth/sign-up?type=admin" 
+                    className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors text-gray-600"
+                  >
+                    <Settings className="w-4 h-4 text-red-600" />
+                    Admin Access
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -41,5 +100,3 @@ export function Navbar() {
 }
 
 export default Navbar
-
-
