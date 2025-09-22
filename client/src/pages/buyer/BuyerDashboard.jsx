@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../lib/api.js'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
 
 export default function BuyerDashboard() {
   const [stats, setStats] = useState({ totalProducts: 0, cartItems: 0, totalOrders: 0, favoriteProducts: 0 })
@@ -53,11 +55,11 @@ export default function BuyerDashboard() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: 24 }}>
-        <div style={{ height: 32, background: '#e5e7eb', borderRadius: 8, width: '33%', marginBottom: 24 }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+      <div className="p-6">
+        <div className="h-8 bg-gray-200 rounded-lg w-1/3 mb-6" />
+        <div className="grid grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} style={{ height: 128, background: '#e5e7eb', borderRadius: 8 }} />
+            <div key={i} className="h-32 bg-gray-200 rounded-lg" />
           ))}
         </div>
       </div>
@@ -72,103 +74,125 @@ export default function BuyerDashboard() {
   ]
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="p-6 space-y-6">
       <div>
-        <h1 style={{ fontSize: 32, fontWeight: 700, margin: 0, color: '#111827' }}>
+        <h1 className="text-3xl font-bold text-foreground">
           Welcome back, {profile?.full_name || 'Buyer'}!
         </h1>
-        <p style={{ color: '#6b7280', marginTop: 8 }}>Dashboard Overview</p>
+        <p className="text-muted-foreground mt-2">Dashboard Overview</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+      <div className="grid grid-cols-4 gap-6">
         {statCards.map((stat, index) => (
-          <div key={index} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 500, color: '#6b7280', margin: 0 }}>{stat.title}</h3>
-              <div style={{ padding: 8, borderRadius: 8, background: stat.bgColor.replace('bg-', '#').replace('-100', '20') }}>
-                <span style={{ fontSize: 16 }}>{stat.icon}</span>
+          <Card key={index}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground">{stat.title}</h3>
+                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                  <span className="text-base">{stat.icon}</span>
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{stat.value}</div>
-          </div>
+              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Shop by Category</h2>
-          <Link to="/buyer/products" style={{ color: '#16a34a', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>View All</Link>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-          {categories.slice(0, 4).map((category) => (
-            <Link
-              key={category.id}
-              to={`/buyer/products?category=${category.id}`}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 16, background: '#f9fafb', borderRadius: 8, textDecoration: 'none', color: 'inherit' }}
-            >
-              <div style={{ padding: 12, borderRadius: 8, background: getCategoryColor(category.type).includes('red') ? '#fef2f2' : '#f0fdf4', marginBottom: 8 }}>
-                <span style={{ fontSize: 24 }}>{getCategoryIcon(category.type)}</span>
-              </div>
-              <span style={{ fontSize: 14, fontWeight: 500, textAlign: 'center' }}>{category.name}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Featured Products</h2>
-          <Link to="/buyer/products" style={{ color: '#16a34a', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>View All</Link>
-        </div>
-        {featuredProducts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 32, color: '#6b7280' }}>
-            <span style={{ fontSize: 48, opacity: 0.5 }}>📦</span>
-            <p style={{ marginTop: 16 }}>No featured products available</p>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Shop by Category</CardTitle>
+            <Link to="/buyer/products" className="text-primary text-sm font-medium hover:underline">View All</Link>
           </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-            {featuredProducts.map((product) => (
-              <div key={product.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 16 }}>
-                <div style={{ aspectRatio: '1 / 1', background: '#f3f4f6', borderRadius: 8, marginBottom: 16, overflow: 'hidden' }}>
-                  <img src={product.image_url || '/placeholder.svg'} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-4">
+            {categories.slice(0, 4).map((category) => (
+              <Link
+                key={category.id}
+                to={`/buyer/products?category=${category.id}`}
+                className="flex flex-col items-center p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors no-underline text-foreground"
+              >
+                <div className={`p-3 rounded-lg mb-2 ${getCategoryColor(category.type)}`}>
+                  <span className="text-2xl">{getCategoryIcon(category.type)}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <h3 style={{ fontWeight: 600, color: '#111827', margin: 0 }}>{product.name}</h3>
-                  <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{product.description || 'Fresh produce from local farmers'}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <span style={{ fontSize: 18, fontWeight: 700, color: '#16a34a' }}>₹{product.price}</span>
-                      <span style={{ fontSize: 14, color: '#6b7280' }}>/{product.unit}</span>
-                    </div>
-                    <button style={{ background: '#16a34a', color: '#fff', padding: '6px 12px', borderRadius: 6, border: 0, fontSize: 14, fontWeight: 500 }}>Add to Cart</button>
-                  </div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
-                    by {product.farmer?.full_name} • {product.farmer?.city}
-                  </div>
-                </div>
-              </div>
+                <span className="text-sm font-medium text-center">{category.name}</span>
+              </Link>
             ))}
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 16px 0' }}>Quick Actions</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-          <Link to="/buyer/products" style={{ background: '#16a34a', color: '#fff', padding: '16px', borderRadius: 8, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', height: 64 }}>
-            <span style={{ fontSize: 24, marginBottom: 4 }}>📦</span>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>Browse Products</span>
-          </Link>
-          <Link to="/buyer/cart" style={{ border: '1px solid #e5e7eb', color: '#111827', padding: '16px', borderRadius: 8, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', height: 64 }}>
-            <span style={{ fontSize: 24, marginBottom: 4 }}>🛒</span>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>View Cart</span>
-          </Link>
-          <Link to="/buyer/orders" style={{ border: '1px solid #e5e7eb', color: '#111827', padding: '16px', borderRadius: 8, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', height: 64 }}>
-            <span style={{ fontSize: 24, marginBottom: 4 }}>📈</span>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>My Orders</span>
-          </Link>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Featured Products</CardTitle>
+            <Link to="/buyer/products" className="text-primary text-sm font-medium hover:underline">View All</Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {featuredProducts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <span className="text-5xl opacity-50">📦</span>
+              <p className="mt-4">No featured products available</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-6">
+              {featuredProducts.map((product) => (
+                <Card key={product.id}>
+                  <CardContent className="p-4">
+                    <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
+                      <img src={product.image_url || '/placeholder.svg'} alt={product.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-foreground">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">{product.description || 'Fresh produce from local farmers'}</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-lg font-bold text-primary">₹{product.price}</span>
+                          <span className="text-sm text-muted-foreground">/{product.unit}</span>
+                        </div>
+                        <Button size="sm">Add to Cart</Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        by {product.farmer?.full_name} • {product.farmer?.city}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            <Link to="/buyer/products" className="block">
+              <Button variant="default" className="w-full h-16 flex flex-col items-center justify-center">
+                <span className="text-2xl mb-1">📦</span>
+                <span className="text-sm font-medium">Browse Products</span>
+              </Button>
+            </Link>
+            <Link to="/buyer/cart" className="block">
+              <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
+                <span className="text-2xl mb-1">🛒</span>
+                <span className="text-sm font-medium">View Cart</span>
+              </Button>
+            </Link>
+            <Link to="/buyer/orders" className="block">
+              <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
+                <span className="text-2xl mb-1">📈</span>
+                <span className="text-sm font-medium">My Orders</span>
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
