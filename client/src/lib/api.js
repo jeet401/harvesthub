@@ -18,11 +18,16 @@ async function request(path, options = {}) {
 
 export const api = {
   health: () => request('/api/health'),
+  
+  // Auth endpoints with role support
   signup: (body) => request('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
   login: (body) => request('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   refresh: () => request('/api/auth/refresh', { method: 'POST' }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   completeProfile: (body) => request('/api/auth/complete-profile', { method: 'POST', body: JSON.stringify(body) }),
+  
+  // Admin endpoints
+  getUsers: (params) => request(`/api/auth/users${params ? '?' + new URLSearchParams(params).toString() : ''}`),
   
   // Products
   getProducts: (params) => request(`/api/products${params ? '?' + new URLSearchParams(params).toString() : ''}`),
@@ -44,5 +49,3 @@ export const api = {
 }
 
 export default api
-
-
