@@ -20,7 +20,9 @@ router.post('/signup', async (req, res) => {
     
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({ email, passwordHash, role: userRole });
-    await Profile.create({ userId: user._id });
+    // Create profile with email username as default name
+    const defaultName = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
+    await Profile.create({ userId: user._id, name: defaultName });
     
     const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
     const refreshToken = signRefreshToken({ sub: user._id.toString() });
@@ -88,6 +90,55 @@ router.post('/logout', (req, res) => {
 });
 
 router.post('/complete-profile', authRequired, async (req, res) => {
+  try {
+    const { name, phone, address } = req.body || {};
+    const profile = await Profile.findOneAndUpdate(
+      { userId: req.user.sub },
+      { name, phone, address },
+      { new: true, upsert: true }
+    );
+    return res.json({ profile });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Profile update failed' });
+  }
+});
+
+router.get('/profile', authRequired, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.sub);
+    const profile = await Profile.findOne({ userId: req.user.sub });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Create default name if profile doesn't exist or has no name
+    const defaultName = user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1);
+    
+    // If profile exists but has no name, provide default
+    if (profile && !profile.name) {
+      profile.name = defaultName;
+    }
+    
+    return res.json({
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt
+      },
+      profile: profile || { userId: user._id, name: defaultName, phone: '', address: '' }
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Profile fetch failed' });
+  }
+});
+
+router.put('/profile', authRequired, async (req, res) => {
   try {
     const { name, phone, address } = req.body || {};
     const profile = await Profile.findOneAndUpdate(

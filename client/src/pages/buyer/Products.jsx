@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import { useCart } from '../../contexts/CartContext.jsx'
 import { Card, CardContent } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 
 export default function Products() {
   const { user } = useAuth()
+  const { addToCart: addToCartContext } = useCart()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -62,7 +64,7 @@ export default function Products() {
     return matchesSearch && matchesCategory
   })
 
-  const addToCart = async (productId) => {
+  const handleAddToCart = async (productId) => {
     if (!user) {
       alert('Please login to add items to cart')
       return
@@ -70,17 +72,15 @@ export default function Products() {
 
     setCartLoading(productId)
     try {
-      await api.addToCart({ productId, quantity: 1 })
-      alert('Added to cart!')
-    } catch (error) {
-      console.error('Add to cart error:', error)
-      if (error.message.includes('Product not found')) {
-        alert('This product is not available. Please try again later.')
-      } else if (error.message.includes('not authenticated') || error.message.includes('token')) {
-        alert('Please login again to add items to cart')
+      const success = await addToCartContext(productId, 1)
+      if (success) {
+        alert('Added to cart!')
       } else {
         alert('Failed to add to cart. Please try again.')
       }
+    } catch (error) {
+      console.error('Add to cart error:', error)
+      alert('Failed to add to cart. Please try again.')
     } finally {
       setCartLoading(null)
     }
@@ -162,7 +162,7 @@ export default function Products() {
                   <span className="text-sm text-muted-foreground">/{product.unit || 'kg'}</span>
                 </div>
                 <Button
-                  onClick={() => addToCart(product._id)}
+                  onClick={() => handleAddToCart(product._id)}
                   size="sm"
                   disabled={cartLoading === product._id || !user}
                 >

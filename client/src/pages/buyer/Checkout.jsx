@@ -130,16 +130,79 @@ export default function Checkout() {
             <h2 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 16px 0' }}>Delivery Information</h2>
             <div style={{ display: 'grid', gap: 16 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Full Name</label>
-                <input type="text" defaultValue="Buyer Name" style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid #e5e7eb' }} />
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4, color: '#16a34a' }}>Full Name</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter your full name"
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px 16px', 
+                    borderRadius: 8, 
+                    border: '2px solid #86efac', 
+                    backgroundColor: '#f0fdf4',
+                    outline: 'none',
+                    transition: 'all 0.2s ease',
+                    ':focus': { borderColor: '#16a34a', backgroundColor: '#fff' }
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#16a34a'
+                    e.target.style.backgroundColor = '#fff'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#86efac'
+                    e.target.style.backgroundColor = '#f0fdf4'
+                  }}
+                />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Phone Number</label>
-                <input type="tel" defaultValue="9999999999" style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid #e5e7eb' }} />
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4, color: '#16a34a' }}>Phone Number</label>
+                <input 
+                  type="tel" 
+                  placeholder="Enter your phone number"
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px 16px', 
+                    borderRadius: 8, 
+                    border: '2px solid #86efac', 
+                    backgroundColor: '#f0fdf4',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#16a34a'
+                    e.target.style.backgroundColor = '#fff'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#86efac'
+                    e.target.style.backgroundColor = '#f0fdf4'
+                  }}
+                />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Delivery Address</label>
-                <textarea rows={4} defaultValue="123 Main Street, City, State - 123456" style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid #e5e7eb' }} />
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4, color: '#16a34a' }}>Delivery Address</label>
+                <textarea 
+                  rows={4} 
+                  placeholder="Enter your complete delivery address"
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px 16px', 
+                    borderRadius: 8, 
+                    border: '2px solid #86efac', 
+                    backgroundColor: '#f0fdf4',
+                    outline: 'none',
+                    transition: 'all 0.2s ease',
+                    resize: 'vertical',
+                    fontFamily: 'inherit'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#16a34a'
+                    e.target.style.backgroundColor = '#fff'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#86efac'
+                    e.target.style.backgroundColor = '#f0fdf4'
+                  }}
+                />
               </div>
             </div>
           </div>

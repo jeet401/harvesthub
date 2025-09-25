@@ -25,6 +25,8 @@ export const api = {
   refresh: () => request('/api/auth/refresh', { method: 'POST' }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   completeProfile: (body) => request('/api/auth/complete-profile', { method: 'POST', body: JSON.stringify(body) }),
+  getProfile: () => request('/api/auth/profile'),
+  updateProfile: (body) => request('/api/auth/profile', { method: 'PUT', body: JSON.stringify(body) }),
   
   // Admin endpoints
   getUsers: (params) => request(`/api/auth/users${params ? '?' + new URLSearchParams(params).toString() : ''}`),

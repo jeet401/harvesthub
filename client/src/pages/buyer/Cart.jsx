@@ -3,55 +3,33 @@ import { Link } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
+import { useCart } from '../../contexts/CartContext.jsx'
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [subtotal, setSubtotal] = useState(0)
+  const { 
+    cartItems, 
+    subtotal, 
+    isLoading, 
+    updateCartItem, 
+    removeFromCart, 
+    fetchCart 
+  } = useCart()
 
   useEffect(() => {
-    fetchCartItems()
+    fetchCart()
   }, [])
-
-  const fetchCartItems = async () => {
-    try {
-      const response = await api.getCart()
-      const cart = response.cart || { items: [], subtotal: 0 }
-      setCartItems(cart.items || [])
-      setSubtotal(cart.subtotal || 0)
-    } catch (error) {
-      console.error('Cart fetch error:', error)
-      // Fallback to empty cart if API fails
-      setCartItems([])
-      setSubtotal(0)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const updateQuantity = async (itemId, newQuantity) => {
     if (newQuantity < 1) {
-      removeItem(itemId)
+      await removeFromCart(itemId)
       return
     }
     
-    try {
-      await api.updateCartItem(itemId, { quantity: newQuantity })
-      // Refresh cart data
-      fetchCartItems()
-    } catch (error) {
-      console.error('Update quantity error:', error)
-    }
+    await updateCartItem(itemId, newQuantity)
   }
 
   const removeItem = async (itemId) => {
-    try {
-      await api.removeFromCart(itemId)
-      // Refresh cart data
-      fetchCartItems()
-    } catch (error) {
-      console.error('Remove item error:', error)
-    }
+    await removeFromCart(itemId)
   }
 
   const proceedToCheckout = () => {

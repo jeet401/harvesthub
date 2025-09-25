@@ -1,12 +1,14 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import { LanguageProvider } from './contexts/LanguageContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import { CartProvider } from './contexts/CartContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/auth/Login.jsx'
 import SignUp from './pages/auth/SignUp.jsx'
 import CompleteProfile from './pages/auth/CompleteProfile.jsx'
 import SignUpSuccess from './pages/auth/SignUpSuccess.jsx'
+import Profile from './pages/Profile.jsx'
 import BuyerDashboard from './pages/buyer/BuyerDashboard.jsx'
 import Products from './pages/buyer/Products.jsx'
 import Cart from './pages/buyer/Cart.jsx'
@@ -28,14 +30,16 @@ export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <div className="min-h-screen bg-background">
-          <Navbar />
-          <Routes>
+        <CartProvider>
+          <div className="min-h-screen bg-background">
+            <Navbar />
+            <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/sign-up" element={<SignUp />} />
             <Route path="/auth/complete-profile" element={<CompleteProfile />} />
             <Route path="/auth/sign-up-success" element={<SignUpSuccess />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/buyer/cart" element={<Cart />} />
             <Route path="/buyer/checkout" element={<Checkout />} />
             <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
@@ -51,7 +55,8 @@ export default function App() {
             <Route path="/admin/orders" element={<Placeholder title="Order Management" />} />
             <Route path="/admin/analytics" element={<Placeholder title="Analytics" />} />
           </Routes>
-        </div>
+          </div>
+        </CartProvider>
       </LanguageProvider>
     </AuthProvider>
   )
