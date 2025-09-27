@@ -15,7 +15,6 @@ import Cart from './pages/buyer/Cart.jsx'
 import Checkout from './pages/buyer/Checkout.jsx'
 import OrderSuccess from './pages/buyer/OrderSuccess.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
-import './App.css'
 
 
 function Placeholder({ title }) {
