@@ -56,12 +56,19 @@ export default function Login() {
     try {
       const response = await login({ email, password, role })
       console.log('Login successful:', response)
+      console.log('Current role:', role)
+      console.log('Response user role:', response.user?.role)
       
-      // Navigate based on the actual user role returned from server
+      // Navigate based on the actual user role returned from server, or fallback to form role
       const userRole = response.user?.role || role
+      console.log('Final user role for navigation:', userRole)
+      
       const dashboardPath = roleConfig[userRole]?.redirectPath || '/dashboard'
+      console.log('Redirecting to:', dashboardPath)
+      
       navigate(dashboardPath)
     } catch (err) {
+      console.error('Login error:', err)
       setError(err.message || 'Login failed')
     } finally {
       setLoading(false)

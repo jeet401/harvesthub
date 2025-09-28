@@ -15,6 +15,13 @@ import Cart from './pages/buyer/Cart.jsx'
 import Checkout from './pages/buyer/Checkout.jsx'
 import OrderSuccess from './pages/buyer/OrderSuccess.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
+import FarmerDashboard from './pages/farmer/FarmerDashboard.jsx'
+import SimpleFarmerDashboard from './pages/farmer/SimpleFarmerDashboard.jsx'
+import ProductDetail from './pages/farmer/ProductDetail.jsx'
+import OrderTracking from './pages/farmer/OrderTracking.jsx'
+import AddProduct from './pages/farmer/AddProduct.jsx'
+import FarmerSignUpSuccess from './pages/auth/FarmerSignUpSuccess.jsx'
+import TestPage from './pages/TestPage.jsx'
 
 
 function Placeholder({ title }) {
@@ -38,6 +45,7 @@ export default function App() {
             <Route path="/auth/sign-up" element={<SignUp />} />
             <Route path="/auth/complete-profile" element={<CompleteProfile />} />
             <Route path="/auth/sign-up-success" element={<SignUpSuccess />} />
+            <Route path="/auth/farmer-signup-success" element={<FarmerSignUpSuccess />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/buyer/cart" element={<Cart />} />
             <Route path="/buyer/checkout" element={<Checkout />} />
@@ -45,9 +53,12 @@ export default function App() {
             <Route path="/buyer/order-success" element={<OrderSuccess />} />
             <Route path="/buyer/orders" element={<Placeholder title="Buyer Orders" />} />
             <Route path="/buyer/products" element={<Products />} />
-            <Route path="/farmer/dashboard" element={<Placeholder title="Farmer Dashboard" />} />
-            <Route path="/farmer/products" element={<Placeholder title="Farmer Products" />} />
-            <Route path="/farmer/orders" element={<Placeholder title="Farmer Orders" />} />
+            <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
+            <Route path="/farmer/dashboard-simple" element={<SimpleFarmerDashboard />} />
+            <Route path="/farmer/products/add" element={<AddProduct />} />
+            <Route path="/farmer/products/:id" element={<ProductDetail />} />
+            <Route path="/farmer/orders" element={<OrderTracking />} />
+            <Route path="/test" element={<TestPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<Placeholder title="User Management" />} />
             <Route path="/admin/products" element={<Placeholder title="Product Management" />} />

@@ -11,6 +11,10 @@ export function Navbar() {
   const { cartCount } = useCart()
   const navigate = useNavigate()
 
+  // Debug: Log user state
+  console.log('Navbar - User state:', user)
+  console.log('Navbar - Loading state:', loading)
+
   const handleLogout = async () => {
     try {
       await logout()

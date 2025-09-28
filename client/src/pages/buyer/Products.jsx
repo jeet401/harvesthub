@@ -26,43 +26,169 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      const params = {}
-      if (searchTerm) params.search = searchTerm
-      if (selectedCategory) params.category = selectedCategory
+      setIsLoading(true);
       
-      // Try to fetch real products from API
-      const response = await api.getProducts(params)
-      setProducts(response.products || [])
+      // Try to fetch products from backend API first
+      let apiProducts = [];
+      try {
+        const response = await fetch('http://localhost:5000/api/products', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          apiProducts = data.products || [];
+          console.log('Fetched products from database:', apiProducts);
+          
+          // Transform backend data to match frontend expectations
+          apiProducts = apiProducts.map(product => ({
+            ...product,
+            name: product.title,
+            quantity: product.stock,
+            category: { 
+              name: product.categoryId?.name || product.categoryName || 'Unknown',
+              _id: product.categoryId?._id
+            },
+            seller: { 
+              name: product.sellerId?.name || product.sellerName || 'Local Farmer',
+              location: product.location || 'India' 
+            },
+            rating: product.rating || 4.5,
+            reviewsCount: product.reviewsCount || Math.floor(Math.random() * 20) + 1,
+            images: product.images && product.images.length > 0 
+              ? product.images 
+              : ['/placeholder.jpg']
+          }));
+        } else {
+          console.log('API failed, using fallback data');
+        }
+      } catch (apiError) {
+        console.log('API not available, using fallback data');
+      }
+
+      // Get farmer-added products from localStorage
+      const farmerProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
+      const localStorageProducts = farmerProducts.map(product => ({
+        ...product,
+        category: { name: product.categoryName || 'Other' },
+        seller: { name: 'Local Farmer', location: product.location || 'Punjab, India' },
+        rating: product.rating || 4.5,
+        reviewsCount: product.reviewsCount || Math.floor(Math.random() * 20) + 1
+      }));
+      
+      // Mock products for demo (only if no real products)
+      const mockProducts = apiProducts.length > 0 ? [] : [
+        {
+          _id: 'mock1',
+          title: 'Fresh Organic Tomatoes',
+          name: 'Fresh Organic Tomatoes',
+          price: 40,
+          stock: 200,
+          quantity: 200,
+          unit: 'kg',
+          images: ['/fresh-vegetables-tomatoes-carrots-onions.png'],
+          description: 'Fresh organic tomatoes grown without pesticides',
+          category: { name: 'Vegetables' },
+          seller: { name: 'Ram Singh', location: 'Punjab' },
+          rating: 4.8,
+          reviewsCount: 15
+        },
+        {
+          _id: 'mock2',
+          title: 'Premium Basmati Rice',
+          name: 'Premium Basmati Rice',
+          price: 80,
+          stock: 500,
+          quantity: 500,
+          unit: 'kg',
+          images: ['/various-seeds-packets-wheat-rice-vegetable-seeds.png'],
+          description: 'Premium quality basmati rice',
+          category: { name: 'Grains & Cereals' },
+          seller: { name: 'Suresh Kumar', location: 'Haryana' },
+          rating: 4.9,
+          reviewsCount: 32
+        }
+      ];
+
+      // Combine all products: API + localStorage + mock (if needed)
+      const allProducts = [
+        ...apiProducts,
+        ...localStorageProducts,
+        ...mockProducts
+      ];
+
+      // Filter products based on search term and category
+      let filteredProducts = allProducts;
+      
+      if (searchTerm) {
+        filteredProducts = filteredProducts.filter(product => 
+          product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
+      if (selectedCategory) {
+        filteredProducts = filteredProducts.filter(product => 
+          product.category?.name === selectedCategory
+        );
+      }
+
+      setProducts(filteredProducts);
     } catch (error) {
-      console.error('Products fetch error:', error)
-      // Fallback to empty array if API fails
-      setProducts([])
+      console.error('Products fetch error:', error);
+      setProducts([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const fetchCategories = async () => {
     try {
-      const response = await api.getCategories()
-      setCategories(response.categories || [])
-    } catch (error) {
-      console.error('Categories fetch error:', error)
-      // Fallback to default categories
-      setCategories([
-        { id: 1, name: 'Fruits', type: 'fruits' },
-        { id: 2, name: 'Vegetables', type: 'vegetables' },
-        { id: 3, name: 'Seeds', type: 'seeds' },
-        { id: 4, name: 'Fertilizers', type: 'fertilizers' },
-      ])
-    }
-  }
+      // Try to fetch categories from backend API first
+      let apiCategories = [];
+      try {
+        const response = await fetch('http://localhost:5000/api/products/categories', {
+          method: 'GET',
+          credentials: 'include',
+        });
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = !selectedCategory || product.categoryId?.name === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+        if (response.ok) {
+          const data = await response.json();
+          apiCategories = data.categories || [];
+          console.log('Fetched categories from database:', apiCategories);
+        } else {
+          console.log('Categories API failed, using fallback data');
+        }
+      } catch (apiError) {
+        console.log('Categories API not available, using fallback data');
+      }
+
+      // Mock categories as fallback
+      const mockCategories = [
+        { _id: '1', name: 'Grains & Cereals' },
+        { _id: '2', name: 'Vegetables' },
+        { _id: '3', name: 'Fruits' },
+        { _id: '4', name: 'Pulses & Legumes' },
+        { _id: '5', name: 'Spices & Herbs' },
+        { _id: '6', name: 'Seeds' },
+        { _id: '7', name: 'Organic Products' },
+        { _id: '8', name: 'Dairy Products' },
+        { _id: '9', name: 'Nuts & Dry Fruits' },
+        { _id: '10', name: 'Flowers' }
+      ];
+
+      // Use API categories if available, otherwise use mock categories
+      const finalCategories = apiCategories.length > 0 ? apiCategories : mockCategories;
+      setCategories(finalCategories);
+    } catch (error) {
+      console.error('Categories fetch error:', error);
+      setCategories([]);
+    }
+  };
+
+  const filteredProducts = products; // Products are already filtered in fetchProducts
 
   const handleAddToCart = async (productId) => {
     if (!user) {

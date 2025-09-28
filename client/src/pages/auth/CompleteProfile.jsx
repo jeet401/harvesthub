@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Button } from '../../components/ui/button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card.jsx'
@@ -7,12 +7,18 @@ import { User, MapPin, Phone, CheckCircle } from 'lucide-react'
 
 export default function CompleteProfile() {
   const navigate = useNavigate()
-  const { completeProfile } = useAuth()
+  const location = useLocation()
+  const { completeProfile, user } = useAuth()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Get user role from location state or auth context
+  const userRole = location.state?.userRole || user?.role || 'buyer'
+  
+  console.log('CompleteProfile - User role:', userRole)
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -42,7 +48,10 @@ export default function CompleteProfile() {
       })
       
       console.log('Profile completed:', response)
-      navigate('/auth/sign-up-success')
+      // Pass the user role to the success page via navigation state
+      navigate('/auth/sign-up-success', { 
+        state: { userRole: response.user?.role || userRole } 
+      })
     } catch (err) {
       setError(err.message || 'Profile update failed')
     } finally {

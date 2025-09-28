@@ -67,12 +67,16 @@ export default function SignUp() {
     try {
       const response = await signup({ email, password, role })
       console.log('Signup successful:', response)
+      console.log('Signup role:', role)
       
       // Navigate based on role
       if (role === 'admin') {
         navigate('/admin/dashboard')
       } else {
-        navigate('/auth/complete-profile')
+        // Pass role to complete profile page
+        navigate('/auth/complete-profile', { 
+          state: { userRole: response.user?.role || role } 
+        })
       }
     } catch (err) {
       setError(err.message || 'Sign up failed')

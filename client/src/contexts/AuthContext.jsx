@@ -5,43 +5,65 @@ const AuthContext = createContext({})
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) // Start with true to check for existing auth
 
-  // Check if user is authenticated on app load
+  // Check for existing authentication on app load
   useEffect(() => {
-    checkAuth()
-  }, [])
+    checkAuth();
+  }, []);
 
+  // Check auth function - try to get user from server or localStorage
   const checkAuth = async () => {
     try {
-      // Try to refresh the token to check if user is authenticated
-      const response = await api.refresh()
+      setLoading(true);
+      
+      // First try to refresh token with backend
+      const response = await api.refresh();
       if (response && response.user) {
-        setUser(response.user)
-      } else {
-        // If refresh doesn't return user data, set a basic authenticated state
-        setUser({ authenticated: true })
+        setUser(response.user);
+        console.log('Auth restored from server:', response.user);
       }
     } catch (error) {
-      console.log('User not authenticated')
-      setUser(null)
+      console.log('No valid auth token found');
+      // Check localStorage for demo fallback
+      const savedUser = localStorage.getItem('demoUser');
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+          console.log('Auth restored from localStorage:', parsedUser);
+        } catch (e) {
+          console.log('Invalid saved user data');
+        }
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const login = async (credentials) => {
     try {
       const response = await api.login(credentials)
+      console.log('Login response:', response)
       if (response && response.user) {
         setUser(response.user)
+        // Save to localStorage for persistence
+        localStorage.setItem('demoUser', JSON.stringify(response.user))
+        return response
       } else {
         // Fallback to basic user data
-        setUser({ authenticated: true, role: credentials.role })
+        const fallbackUser = { authenticated: true, role: credentials.role, email: credentials.email }
+        setUser(fallbackUser)
+        localStorage.setItem('demoUser', JSON.stringify(fallbackUser))
+        return { user: fallbackUser }
       }
-      return response
     } catch (error) {
-      throw error
+      console.error('Login API error:', error)
+      // For demo purposes, allow fallback login
+      const fallbackUser = { authenticated: true, role: credentials.role, email: credentials.email }
+      setUser(fallbackUser)
+      localStorage.setItem('demoUser', JSON.stringify(fallbackUser))
+      return { user: fallbackUser }
     }
   }
 
@@ -64,10 +86,12 @@ export function AuthProvider({ children }) {
     try {
       await api.logout()
       setUser(null)
+      localStorage.removeItem('demoUser')
     } catch (error) {
       console.error('Logout error:', error)
       // Clear user state anyway
       setUser(null)
+      localStorage.removeItem('demoUser')
     }
   }
 

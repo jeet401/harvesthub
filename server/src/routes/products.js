@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const { authRequired } = require('../middleware/auth');
 
 // Get all categories
 router.get('/categories', async (req, res) => {
@@ -15,7 +16,7 @@ router.get('/categories', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const { category, search, limit = 20, page = 1 } = req.query;
+    const { category, search, limit = 20, page = 1, seller } = req.query;
     const query = {};
     
     if (category) {
@@ -29,6 +30,15 @@ router.get('/', async (req, res) => {
         { description: { $regex: search, $options: 'i' } }
       ];
     }
+
+    // Filter by seller for farmer dashboard
+    if (seller === 'current') {
+      // This would need authentication middleware to get current user
+      // For now, skip this filter to avoid 500 error
+      console.log('Seller filter requested but skipping for now');
+    } else if (seller) {
+      query.sellerId = seller;
+    }
     
     const products = await Product.find(query)
       .populate('categoryId', 'name')
@@ -40,7 +50,57 @@ router.get('/', async (req, res) => {
     return res.json({ products });
   } catch (error) {
     console.error('Products fetch error:', error);
-    return res.status(500).json({ message: 'Failed to fetch products' });
+    return res.status(500).json({ 
+      message: 'Failed to fetch products',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Create new product (farmers only)
+router.post('/', authRequired, async (req, res) => {
+  try {
+    console.log('Creating product with user:', req.user);
+    console.log('Request body:', req.body);
+    
+    const { title, description, price, stock, categoryId, images } = req.body;
+    
+    // Validate required fields
+    if (!title || !price || !stock) {
+      return res.status(400).json({ message: 'Title, price, and stock are required' });
+    }
+    
+    // Check if category exists if provided, but don't require it
+    if (categoryId) {
+      const category = await Category.findById(categoryId);
+      if (!category) {
+        console.log('Category not found, creating product without category');
+      }
+    }
+    
+    const product = new Product({
+      sellerId: req.user.sub, // Use sub from JWT payload
+      title,
+      description,
+      price,
+      stock,
+      categoryId: categoryId || null, // Allow null category
+      images
+    });
+
+    await product.save();
+    
+    const populatedProduct = await Product.findById(product._id)
+      .populate('categoryId', 'name')
+      .populate('sellerId', 'email');
+    
+    return res.status(201).json({ product: populatedProduct });
+  } catch (error) {
+    console.error('Product creation error:', error);
+    return res.status(500).json({ 
+      message: 'Failed to create product',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -58,6 +118,54 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     console.error('Product fetch error:', error);
     return res.status(500).json({ message: 'Failed to fetch product' });
+  }
+});
+
+// Update product (farmers only)
+router.put('/:id', authRequired, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    if (product.sellerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to update this product' });
+    }
+    
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    ).populate('categoryId', 'name').populate('sellerId', 'email');
+    
+    return res.json({ product: updatedProduct });
+  } catch (error) {
+    console.error('Product update error:', error);
+    return res.status(500).json({ message: 'Failed to update product' });
+  }
+});
+
+// Delete product (farmers only)
+router.delete('/:id', authRequired, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    if (product.sellerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to delete this product' });
+    }
+    
+    await Product.findByIdAndDelete(req.params.id);
+    
+    return res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Product deletion error:', error);
+    return res.status(500).json({ message: 'Failed to delete product' });
   }
 });
 

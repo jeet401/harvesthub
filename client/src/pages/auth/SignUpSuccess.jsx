@@ -1,19 +1,25 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Button } from '../../components/ui/button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card.jsx'
 import { CheckCircle, ArrowRight, Home, User, Tractor, Settings } from 'lucide-react'
 
 export default function SignUpSuccess() {
   const navigate = useNavigate()
-  const [userRole, setUserRole] = useState('buyer') // This should come from your auth context
-  const [countdown, setCountdown] = useState(5)
-
-  // You might want to get the user role from your auth context or API call
-  // For now, I'll assume it's stored or can be retrieved
-
+  const location = useLocation()
+  const { user } = useAuth()
+  const [countdown, setCountdown] = useState(3)
+  
+  // Get user role from multiple sources with fallback
+  const userRole = user?.role || location.state?.userRole || 'buyer'
+  
   useEffect(() => {
-    // Auto-redirect after 5 seconds
+    console.log('SignUpSuccess - User from auth:', user)
+    console.log('SignUpSuccess - Location state:', location.state)
+    console.log('SignUpSuccess - Final user role:', userRole)
+    
+    // Auto-redirect after 3 seconds
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -26,7 +32,7 @@ export default function SignUpSuccess() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [])
+  }, [userRole]) // Add userRole as dependency
 
   const handleRedirectToDashboard = () => {
     const dashboardRoutes = {
