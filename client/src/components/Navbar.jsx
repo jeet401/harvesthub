@@ -4,6 +4,7 @@ import { ArrowRight, User, Tractor, Settings, LogOut, ShoppingCart, ChevronDown,
 import { useLanguage } from '../contexts/LanguageContext.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useCart } from '../contexts/CartContext.jsx'
+import MagicCard from './MagicCard.jsx'
 
 export function Navbar() {
   const { t } = useLanguage()
@@ -25,17 +26,19 @@ export function Navbar() {
   }
   
   return (
-    <header className="border-b border-border bg-card">
+    <header className="border-b border-gray-200 bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-lg">
       <div className="w-full px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Left side: Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-primary">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg group-hover:shadow-xl transition-all duration-300 glow-pulse">
               <div className="w-6 h-6 bg-white rounded text-center flex items-center justify-center">
                 🌾
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-primary">HarvestHub</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+              HarvestHub ✨
+            </h1>
           </Link>
 
           {/* Right side: Auth buttons or User menu */}

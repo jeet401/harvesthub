@@ -4,6 +4,8 @@ import { api } from '../lib/api.js'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { User, Mail, Phone, MapPin, Calendar, Shield, Edit, Save, X } from 'lucide-react'
+import MagicBento from '../components/MagicBento.jsx'
+import MagicCard from '../components/MagicCard.jsx'
 
 export default function Profile() {
   const { user } = useAuth()
@@ -94,12 +96,14 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse" />
-          <div className="h-64 bg-gray-200 rounded animate-pulse" />
+      <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="space-y-6">
+            <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/3 animate-pulse" />
+            <MagicCard className="h-64 animate-pulse" />
+          </div>
         </div>
-      </div>
+      </MagicBento>
     )
   }
 
@@ -107,192 +111,199 @@ export default function Profile() {
   const IconComponent = roleConfig.icon
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{roleConfig.title}</h1>
-            <p className="text-muted-foreground mt-2">{roleConfig.description}</p>
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="float-animation">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+                {roleConfig.title} ✨
+              </h1>
+              <p className="text-gray-600 mt-2">{roleConfig.description}</p>
+            </div>
+            {!isEditing && (
+              <Button 
+                onClick={() => setIsEditing(true)} 
+                className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <Edit className="w-4 h-4" />
+                Edit Profile
+              </Button>
+            )}
           </div>
-          {!isEditing && (
-            <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2">
-              <Edit className="w-4 h-4" />
-              Edit Profile
-            </Button>
+
+          {error && (
+            <MagicCard className="bg-red-50 border-2 border-red-200 p-4" glowIntensity="low">
+              <p className="text-red-700">{error}</p>
+            </MagicCard>
+          )}
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Account Information */}
+            <MagicCard glowIntensity="medium">
+              <div className={`p-4 ${roleConfig.bgColor} rounded-t-xl`}>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-full shadow-lg">
+                    <IconComponent className={`w-5 h-5 ${roleConfig.color}`} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Account Information</h3>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p className="text-gray-900">{profileData?.user?.email}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Shield className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Role</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium capitalize shadow-sm ${roleConfig.bgColor} ${roleConfig.color}`}>
+                      {profileData?.user?.role}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Member Since</p>
+                    <p className="text-gray-900">
+                      {profileData?.user?.createdAt ? 
+                        new Date(profileData.user.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        }) : 
+                        'N/A'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </MagicCard>
+
+            {/* Personal Information */}
+            <MagicCard glowIntensity="medium">
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+                  {isEditing && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={updating}
+                        className="flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                      >
+                        <Save className="w-3 h-3" />
+                        {updating ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancel}
+                        disabled={updating}
+                        className="flex items-center gap-1"
+                      >
+                        <X className="w-3 h-3" />
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <User className="w-4 h-4 text-gray-500" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500">Full Name</p>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 shadow-sm"
+                        placeholder="Enter your full name"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profileData?.profile?.name || 'Not provided'}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Phone className="w-4 h-4 text-gray-500" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500">Phone Number</p>
+                    {isEditing ? (
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 shadow-sm"
+                        placeholder="Enter your phone number"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profileData?.profile?.phone || 'Not provided'}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-4 h-4 text-gray-500 mt-1" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500">Address</p>
+                    {isEditing ? (
+                      <textarea
+                        value={formData.address}
+                        onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 shadow-sm"
+                        placeholder="Enter your address"
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profileData?.profile?.address || 'Not provided'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </MagicCard>
+          </div>
+
+          {/* Role-specific additional information */}
+          {user?.role === 'farmer' && (
+            <MagicCard glowIntensity="low">
+              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-xl">
+                <h3 className="text-lg font-semibold text-gray-900">🚜 Farm Details</h3>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-600">
+                  Farm-specific features and details will be added here in future updates.
+                </p>
+              </div>
+            </MagicCard>
+          )}
+
+          {user?.role === 'admin' && (
+            <MagicCard glowIntensity="low">
+              <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-t-xl">
+                <h3 className="text-lg font-semibold text-gray-900">⚙️ Admin Settings</h3>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-600">
+                  Administrator-specific settings and controls will be available here.
+                </p>
+              </div>
+            </MagicCard>
           )}
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Account Information */}
-          <Card>
-            <CardHeader className={`${roleConfig.bgColor} rounded-t-lg`}>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-full">
-                  <IconComponent className={`w-5 h-5 ${roleConfig.color}`} />
-                </div>
-                <CardTitle>Account Information</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-gray-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-foreground">{profileData?.user?.email}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <Shield className="w-4 h-4 text-gray-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Role</p>
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium capitalize ${roleConfig.bgColor} ${roleConfig.color}`}>
-                    {profileData?.user?.role}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Member Since</p>
-                  <p className="text-foreground">
-                    {profileData?.user?.createdAt ? 
-                      new Date(profileData.user.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      }) : 
-                      'N/A'
-                    }
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Personal Information */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Personal Information</CardTitle>
-                {isEditing && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={handleSave}
-                      disabled={updating}
-                      className="flex items-center gap-1"
-                    >
-                      <Save className="w-3 h-3" />
-                      {updating ? 'Saving...' : 'Save'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleCancel}
-                      disabled={updating}
-                      className="flex items-center gap-1"
-                    >
-                      <X className="w-3 h-3" />
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              <div className="flex items-center gap-3">
-                <User className="w-4 h-4 text-gray-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500">Full Name</p>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Enter your full name"
-                    />
-                  ) : (
-                    <p className="text-foreground">{profileData?.profile?.name || 'Not provided'}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-gray-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500">Phone Number</p>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Enter your phone number"
-                    />
-                  ) : (
-                    <p className="text-foreground">{profileData?.profile?.phone || 'Not provided'}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-gray-500 mt-1" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500">Address</p>
-                  {isEditing ? (
-                    <textarea
-                      value={formData.address}
-                      onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Enter your address"
-                      rows={3}
-                    />
-                  ) : (
-                    <p className="text-foreground">{profileData?.profile?.address || 'Not provided'}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Role-specific additional information */}
-        {user?.role === 'farmer' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Farm Details</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">
-                Farm-specific features and details will be added here in future updates.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {user?.role === 'admin' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">
-                Administrator-specific settings and controls will be available here.
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </div>
-    </div>
+    </MagicBento>
   )
 }

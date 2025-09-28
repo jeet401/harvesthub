@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Button } from '../../components/ui/button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card.jsx'
 import { User, Tractor, Settings, Eye, EyeOff } from 'lucide-react'
+import MagicBento from '../../components/MagicBento.jsx'
+import MagicCard from '../../components/MagicCard.jsx'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -76,36 +78,36 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className={`${config.bgColor} rounded-t-lg`}>
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-white rounded-full shadow-sm">
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center p-4">
+      <MagicCard className="w-full max-w-md" glowIntensity="high">
+        <div className={`p-6 ${config.bgColor} rounded-t-xl`}>
+          <div className="flex items-center justify-center mb-4 float-animation">
+            <div className="p-4 bg-white rounded-full shadow-lg glow-pulse">
               <Icon className={`w-8 h-8 ${config.color}`} />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">
-            {config.title}
-          </CardTitle>
-          <p className="text-center text-sm text-gray-600 mt-2">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
+            {config.title} ✨
+          </h2>
+          <p className="text-center text-sm text-gray-600">
             {config.description}
           </p>
-        </CardHeader>
-        <CardContent className="p-6">
+        </div>
+        <div className="p-6">
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Email Address</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Email Address</label>
               <input 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 placeholder="Enter your email" 
                 type="email" 
                 required 
-                className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 shadow-sm hover:shadow-md"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Password</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Password</label>
               <div className="relative">
                 <input 
                   value={password} 
@@ -113,28 +115,28 @@ export default function Login() {
                   placeholder="Enter your password" 
                   type={showPassword ? "text" : "password"}
                   required 
-                  className="w-full px-3 py-2 pr-10 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 shadow-sm hover:shadow-md"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
             
             {error && (
-              <div className="text-destructive text-sm bg-red-50 p-3 rounded-md border border-red-200">
-                {error}
-              </div>
+              <MagicCard className="p-4 bg-red-50 border-2 border-red-200" glowIntensity="low">
+                <p className="text-red-700 text-sm">{error}</p>
+              </MagicCard>
             )}
             
             <Button 
               type="submit" 
               disabled={loading} 
-              className="w-full"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 glow-pulse"
             >
               {loading ? 'Signing in...' : `Sign in as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
             </Button>
@@ -145,7 +147,7 @@ export default function Login() {
               Don't have an account?{' '}
               <Link 
                 to={`/auth/sign-up?type=${role}`} 
-                className="font-medium text-primary hover:underline"
+                className="font-medium text-green-600 hover:text-green-700 hover:underline transition-colors duration-200"
               >
                 Create {role} account
               </Link>
@@ -179,14 +181,14 @@ export default function Login() {
           <div className="mt-4 text-center">
             <Link 
               to="/auth/forgot-password" 
-              className="text-xs text-gray-500 hover:text-primary"
+              className="text-xs text-gray-500 hover:text-green-600 transition-colors duration-200"
             >
               Forgot your password?
             </Link>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </MagicCard>
+    </MagicBento>
   )
 }
 

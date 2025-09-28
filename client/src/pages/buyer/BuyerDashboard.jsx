@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import MagicBento from '../../components/MagicBento.jsx'
+import MagicCard from '../../components/MagicCard.jsx'
 
 export default function BuyerDashboard() {
   const { user } = useAuth()
@@ -51,83 +53,87 @@ export default function BuyerDashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="h-8 bg-gray-200 rounded-lg w-1/3 mb-6 animate-pulse" />
-        <div className="grid grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-          ))}
+      <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+        <div className="p-6">
+          <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-1/3 mb-6 animate-pulse" />
+          <div className="grid grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <MagicCard key={i} className="h-64 animate-pulse" />
+            ))}
+          </div>
         </div>
-      </div>
+      </MagicBento>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Message */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Welcome back, {buyerName}!
-        </h1>
-        <p className="text-muted-foreground mt-2">Discover fresh products from local farmers</p>
-      </div>
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+      <div className="p-6 space-y-6">
+        {/* Welcome Message */}
+        <div className="float-animation">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+            Welcome back, {buyerName}! 🛒✨
+          </h1>
+          <p className="text-gray-600 mt-2">Discover fresh products from local farmers with magical ease</p>
+        </div>
 
-      {/* Featured Products */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Featured Products</CardTitle>
-            <Link to="/buyer/products" className="text-primary text-sm font-medium hover:underline">
-              Browse All Products
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {featuredProducts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <span className="text-5xl opacity-50">📦</span>
-              <p className="mt-4">No featured products available</p>
-              <Link to="/buyer/products" className="text-primary hover:underline mt-2 inline-block">
-                Browse Products
+        {/* Featured Products */}
+        <MagicCard glowIntensity="intense">
+          <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">🌟 Featured Products</h2>
+              <Link to="/buyer/products" className="text-green-600 text-sm font-medium hover:text-green-700 transition-colors">
+                Browse All Products →
               </Link>
             </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-6">
-              {featuredProducts.slice(0, 6).map((product) => (
-                <Card key={product._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="aspect-square bg-muted overflow-hidden">
-                    <img 
-                      src={product.images?.[0] || '/placeholder.svg'} 
-                      alt={product.title} 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-foreground text-lg">{product.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {product.description || 'Fresh produce from local farmers'}
-                      </p>
-                      <div className="flex items-center justify-between pt-2">
-                        <div>
-                          <span className="text-xl font-bold text-primary">₹{product.price}</span>
-                          <span className="text-sm text-muted-foreground">/{product.unit || 'kg'}</span>
+          </div>
+          <div className="p-6">
+            {featuredProducts.length === 0 ? (
+              <div className="text-center py-8 text-gray-600">
+                <span className="text-6xl opacity-50">📦</span>
+                <p className="mt-4 text-lg">No featured products available</p>
+                <Link to="/buyer/products" className="text-green-600 hover:text-green-700 mt-2 inline-block font-medium">
+                  Browse Products
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-6">
+                {featuredProducts.slice(0, 6).map((product) => (
+                  <MagicCard key={product._id} className="overflow-hidden" glowIntensity="medium">
+                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                      <img 
+                        src={product.images?.[0] || '/placeholder.svg'} 
+                        alt={product.title} 
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-110" 
+                      />
+                    </div>
+                    <div className="p-4">
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-gray-900 text-lg">{product.title}</h3>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {product.description || 'Fresh produce from local farmers'}
+                        </p>
+                        <div className="flex items-center justify-between pt-2">
+                          <div>
+                            <span className="text-xl font-bold text-green-600">₹{product.price}</span>
+                            <span className="text-sm text-gray-500">/{product.unit || 'kg'}</span>
+                          </div>
+                          <Link to="/buyer/products" className="text-xs text-green-600 hover:text-green-700 font-medium transition-colors">
+                            View Details
+                          </Link>
                         </div>
-                        <Link to="/buyer/products" className="text-xs text-primary hover:underline">
-                          View Details
-                        </Link>
-                      </div>
-                      <div className="text-xs text-muted-foreground border-t pt-2">
-                        by {product.sellerId?.email}
+                        <div className="text-xs text-gray-500 border-t pt-2">
+                          by {product.sellerId?.email}
+                        </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                  </MagicCard>
+                ))}
+              </div>
+            )}
+          </div>
+        </MagicCard>
+      </div>
+    </MagicBento>
   )
 }

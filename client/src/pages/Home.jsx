@@ -3,6 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { ImageWithFallback } from '../components/ImageWithFallback.jsx';
 import { ArrowRight, Leaf, Users, TrendingUp, Shield, Star, User, Tractor } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import MagicBento from '../components/MagicBento.jsx';
+import MagicCard from '../components/MagicCard.jsx';
+import BlurText from '../components/ui/blur-text.jsx';
 
 export default function Home() {
   const features = [
@@ -50,27 +53,27 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-green-50 to-emerald-50">
+      <section className="py-20 bg-gradient-magical">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-black">
-                Ready to Transform Your Agricultural Business?
+            <div className="float-animation">
+              <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-800 via-green-700 to-teal-600 bg-clip-text text-transparent animate-fade-in-up">
+                Ready to Transform Your Agricultural Business? ✨
               </h1>
-              <p className="text-xl mb-8 leading-relaxed text-black">
-                Join thousands of farmers and buyers who are already benefiting from direct, transparent trading
+              <p className="text-xl mb-8 leading-relaxed text-gray-700">
+                Join thousands of farmers and buyers who are already benefiting from direct, transparent trading with magical efficiency
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/auth/sign-up?type=farmer">
-                  <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold text-xl px-8 py-3 flex items-center gap-2">
+                  <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold text-xl px-8 py-3 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 glow-pulse">
                     <Tractor className="w-5 h-5" />
                     Start as Farmer
                   </Button>
                 </Link>
                 <Link to="/auth/sign-up?type=buyer">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold text-xl px-8 py-3 flex items-center gap-2">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold text-xl px-8 py-3 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300">
                     <User className="w-5 h-5" />
                     Start as Buyer
                   </Button>
@@ -78,11 +81,13 @@ export default function Home() {
               </div>
             </div>
             <div className="relative">
-              <ImageWithFallback
-                src="https://kerone.com/blog/wp-content/uploads/2021/05/Drying-in-Agricultural.jpg"
-                alt="Fresh vegetables and crops"
-                className="rounded-2xl shadow-2xl w-full h-[500px] object-cover"
-              />
+              <MagicCard className="overflow-hidden" glowIntensity="high">
+                <ImageWithFallback
+                  src="https://kerone.com/blog/wp-content/uploads/2021/05/Drying-in-Agricultural.jpg"
+                  alt="Fresh vegetables and crops"
+                  className="w-full h-[500px] object-cover"
+                />
+              </MagicCard>
             </div>
           </div>
         </div>
@@ -92,11 +97,11 @@ export default function Home() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Why Choose HarvestHub?
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+              Why Choose HarvestHub? 🌟
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Our platform provides everything you need for successful agricultural trading
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Our platform provides everything you need for successful agricultural trading with magical precision
             </p>
           </div>
 
@@ -104,17 +109,13 @@ export default function Home() {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card key={index} className="group hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                      <Icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <CardTitle>{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{feature.description}</CardDescription>
-                  </CardContent>
-                </Card>
+                <MagicCard key={index} glowIntensity="medium" className="p-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center mb-4 shadow-lg">
+                    <Icon className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </MagicCard>
               );
             })}
           </div>
@@ -122,47 +123,47 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-gray-100">
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-green-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-black">
-              How It Works
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+              How It Works ⚡
             </h2>
-            <p className="text-xl text-black">
-              Simple steps to start trading
+            <p className="text-xl text-gray-700">
+              Simple steps to start magical trading
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform">
-                <span className="text-2xl font-bold text-black">1</span>
+            <MagicCard className="text-center p-8" glowIntensity="high">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg glow-pulse">
+                <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-black">Register & Verify</h3>
-              <p className="text-black">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900">Register & Verify</h3>
+              <p className="text-gray-600">
                 Sign up as a farmer or buyer and complete AGMARK verification for quality assurance
               </p>
-            </div>
+            </MagicCard>
 
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform">
-                <span className="text-2xl font-bold text-black">2</span>
+            <MagicCard className="text-center p-8" glowIntensity="high">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg glow-pulse">
+                <span className="text-2xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-black">List or Browse</h3>
-              <p className="text-black">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900">List or Browse</h3>
+              <p className="text-gray-600">
                 Farmers list their crops while buyers browse and post requirements with smart filtering
               </p>
-            </div>
+            </MagicCard>
 
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform">
-                <span className="text-2xl font-bold text-black">3</span>
+            <MagicCard className="text-center p-8" glowIntensity="high">
+              <div className="w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg glow-pulse">
+                <span className="text-2xl font-bold text-white">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-black">Trade & Track</h3>
-              <p className="text-black">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900">Trade & Track</h3>
+              <p className="text-gray-600">
                 Connect, negotiate, complete secure payments and track orders in real-time
               </p>
-            </div>
+            </MagicCard>
           </div>
         </div>
       </section>
@@ -171,83 +172,79 @@ export default function Home() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Trusted by Thousands
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+              Trusted by Thousands 💫
             </h2>
-            <p className="text-xl text-muted-foreground">
-              See what our community says about HarvestHub
+            <p className="text-xl text-gray-600">
+              See what our magical community says about HarvestHub
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center space-x-1 mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <CardTitle className="text-lg">{testimonial.name}</CardTitle>
-                  <CardDescription>{testimonial.role}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="italic">"{testimonial.comment}"</p>
-                </CardContent>
-              </Card>
+              <MagicCard key={index} glowIntensity="medium" className="p-6">
+                <div className="flex items-center space-x-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-1">{testimonial.name}</h4>
+                <p className="text-sm text-gray-500 mb-4">{testimonial.role}</p>
+                <p className="italic text-gray-700">"{testimonial.comment}"</p>
+              </MagicCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-muted">
+      <footer className="py-12 bg-gradient-to-br from-gray-900 to-emerald-900">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 rounded-lg bg-primary">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
                   <div className="w-6 h-6 bg-white rounded text-center flex items-center justify-center">
                     🌾
                   </div>
                 </div>
-                <h3 className="text-xl font-bold">HarvestHub</h3>
+                <h3 className="text-xl font-bold text-white">HarvestHub</h3>
               </div>
-              <p className="text-muted-foreground">
-                Connecting agriculture, empowering communities, building sustainable futures.
+              <p className="text-gray-300">
+                Connecting agriculture, empowering communities, building sustainable futures with magical innovation.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">For Farmers</a></li>
-                <li><a href="#" className="hover:text-foreground">For Buyers</a></li>
-                <li><a href="#" className="hover:text-foreground">AGMARK Certification</a></li>
+              <h4 className="font-semibold mb-4 text-white">Platform</h4>
+              <ul className="space-y-2 text-gray-300">
+                <li><a href="#" className="hover:text-green-400 transition-colors">For Farmers</a></li>
+                <li><a href="#" className="hover:text-green-400 transition-colors">For Buyers</a></li>
+                <li><a href="#" className="hover:text-green-400 transition-colors">AGMARK Certification</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">Help Center</a></li>
-                <li><a href="#" className="hover:text-foreground">Contact Us</a></li>
-                <li><a href="#" className="hover:text-foreground">Resources</a></li>
+              <h4 className="font-semibold mb-4 text-white">Support</h4>
+              <ul className="space-y-2 text-gray-300">
+                <li><a href="#" className="hover:text-green-400 transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-green-400 transition-colors">Contact Us</a></li>
+                <li><a href="#" className="hover:text-green-400 transition-colors">Resources</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">About Us</a></li>
-                <li><a href="#" className="hover:text-foreground">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-foreground">Terms of Service</a></li>
+              <h4 className="font-semibold mb-4 text-white">Company</h4>
+              <ul className="space-y-2 text-gray-300">
+                <li><a href="#" className="hover:text-green-400 transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-green-400 transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-green-400 transition-colors">Terms of Service</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2025 HarvestHub. All rights reserved. Made with 🌱 for farmers.</p>
+          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2025 HarvestHub. All rights reserved. Made with 🌱 and ✨ for farmers.</p>
           </div>
         </div>
       </footer>
-    </div>
+    </MagicBento>
   );
 }
 

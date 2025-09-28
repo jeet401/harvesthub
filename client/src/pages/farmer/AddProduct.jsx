@@ -3,6 +3,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Plus, Save, X, Upload, Image as ImageIcon } from 'lucide-react';
+import MagicBento from '../../components/MagicBento';
+import MagicCard from '../../components/MagicCard';
 
 const AddProduct = () => {
   const { user } = useAuth();

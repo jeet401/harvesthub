@@ -3,8 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useCart } from '../../contexts/CartContext.jsx'
-import { Card, CardContent } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
+import MagicBento from '../../components/MagicBento.jsx'
+import MagicCard from '../../components/MagicCard.jsx'
 
 export default function Products() {
   const { user } = useAuth()
@@ -226,90 +227,98 @@ export default function Products() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-4 text-foreground">Browse Products</h1>
-        
-        <div className="flex gap-4 mb-6 flex-wrap">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-3 rounded-lg border border-border min-w-[300px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-3 rounded-lg border border-border min-w-[200px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">All Categories</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.name}>{category.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          {categories.map(category => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.name ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(selectedCategory === category.name ? '' : category.name)}
-              className="rounded-full"
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+            Browse Products ✨
+          </h1>
+          
+          <div className="flex gap-4 mb-6 flex-wrap">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-3 rounded-lg border-2 border-gray-300 min-w-[300px] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300"
+            />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-3 rounded-lg border-2 border-gray-300 min-w-[200px] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300"
             >
-              {category.name}
-            </Button>
-          ))}
-        </div>
-      </div>
+              <option value="">All Categories</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.name}>{category.name}</option>
+              ))}
+            </select>
+          </div>
 
-      <div className="grid grid-cols-auto-fill gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-        {filteredProducts.map((product) => (
-          <Card key={product._id} className="overflow-hidden">
-            <div className="aspect-square bg-muted overflow-hidden">
-              <img src={product.images?.[0] || '/placeholder.svg'} alt={product.title} className="w-full h-full object-cover" />
-            </div>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
-                  {product.categoryId?.name}
-                </span>
-                <span className="text-xs text-muted-foreground">In Stock</span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-2 text-lg">{product.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                {product.description || 'Fresh produce from local farmers'}
-              </p>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <span className="text-xl font-bold text-primary">₹{product.price}</span>
-                  <span className="text-sm text-muted-foreground">/{product.unit || 'kg'}</span>
+          <div className="flex gap-2 flex-wrap">
+            {categories.map(category => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.name ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(selectedCategory === category.name ? '' : category.name)}
+                className="rounded-full"
+              >
+                {category.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {filteredProducts.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <span className="text-5xl opacity-50">🔍</span>
+            <p className="mt-4 text-lg">No products found</p>
+            <p className="mt-2">Try adjusting your search or filters</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-auto-fill gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+            {filteredProducts.map((product) => (
+              <MagicCard key={product._id} className="overflow-hidden" glowIntensity="medium">
+                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                  <img 
+                    src={product.images?.[0] || '/placeholder.svg'} 
+                    alt={product.title} 
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110" 
+                  />
                 </div>
-                <Button
-                  onClick={() => handleAddToCart(product._id)}
-                  size="sm"
-                  disabled={cartLoading === product._id || !user}
-                >
-                  {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
-                </Button>
-              </div>
-              <div className="text-xs text-muted-foreground border-t border-border pt-2">
-                by {product.sellerId?.email}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+                      {product.categoryId?.name}
+                    </span>
+                    <span className="text-xs text-green-600 font-medium">In Stock</span>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">{product.title}</h3>
+                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                    {product.description || 'Fresh produce from local farmers'}
+                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="text-xl font-bold text-primary">₹{product.price}</span>
+                      <span className="text-sm text-muted-foreground">/{product.unit || 'kg'}</span>
+                    </div>
+                    <Button
+                      onClick={() => handleAddToCart(product._id)}
+                      size="sm"
+                      disabled={cartLoading === product._id || !user}
+                    >
+                      {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground border-t border-border pt-2">
+                    by {product.sellerId?.email}
+                  </div>
+                </div>
+              </MagicCard>
+            ))}
+          </div>
+        )}
       </div>
-
-      {filteredProducts.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <span className="text-5xl opacity-50">🔍</span>
-          <p className="mt-4 text-lg">No products found</p>
-          <p className="mt-2">Try adjusting your search or filters</p>
-        </div>
-      )}
-    </div>
+    </MagicBento>
   )
 }
