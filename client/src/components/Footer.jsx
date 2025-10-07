@@ -2,40 +2,40 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <footer style={{ background: '#111827', color: '#ffffff', padding: '64px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+    <footer className="bg-gray-900 dark:bg-gray-950 text-white py-16 px-4 transition-colors duration-300">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ height: 32, width: 32, borderRadius: 8, background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: 12 }}>FB</span>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">FB</span>
               </div>
-              <span style={{ fontWeight: 700, fontSize: 20, color: '#34d399' }}>FarmByte</span>
+              <span className="font-bold text-xl text-green-400">FarmByte</span>
             </div>
-            <p style={{ color: '#9ca3af', marginTop: 12 }}>Connecting buyers with farmers for fresh, local produce.</p>
+            <p className="text-gray-400 dark:text-gray-500 transition-colors duration-300">Connecting buyers with farmers for fresh, local produce.</p>
           </div>
           <div>
-            <h3 style={{ fontWeight: 600, fontSize: 18 }}>Quick Links</h3>
-            <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
-              <Link to="/" style={{ color: '#9ca3af', textDecoration: 'none' }}>Home</Link>
-              <a href="#how-it-works" style={{ color: '#9ca3af', textDecoration: 'none' }}>How it works</a>
-              <Link to="/auth/login" style={{ color: '#9ca3af', textDecoration: 'none' }}>Sign in</Link>
-              <Link to="/auth/sign-up" style={{ color: '#9ca3af', textDecoration: 'none' }}>Sign up</Link>
+            <h3 className="font-semibold text-lg text-white">Quick Links</h3>
+            <div className="grid gap-2 mt-3">
+              <Link to="/" className="text-gray-400 dark:text-gray-500 hover:text-green-400 transition-colors duration-200">Home</Link>
+              <a href="#how-it-works" className="text-gray-400 dark:text-gray-500 hover:text-green-400 transition-colors duration-200">How it works</a>
+              <Link to="/auth/login" className="text-gray-400 dark:text-gray-500 hover:text-green-400 transition-colors duration-200">Sign in</Link>
+              <Link to="/auth/sign-up" className="text-gray-400 dark:text-gray-500 hover:text-green-400 transition-colors duration-200">Sign up</Link>
             </div>
           </div>
           <div>
-            <h3 style={{ fontWeight: 600, fontSize: 18 }}>Contact</h3>
-            <div style={{ color: '#9ca3af', marginTop: 12 }}>
+            <h3 className="font-semibold text-lg text-white">Contact</h3>
+            <div className="text-gray-400 dark:text-gray-500 mt-3 transition-colors duration-300">
               <p>support@farmbyte.com</p>
               <p>+91 12345 67890</p>
             </div>
           </div>
           <div>
-            <h3 style={{ fontWeight: 600, fontSize: 18 }}>Follow us</h3>
-            <p style={{ color: '#9ca3af', marginTop: 12 }}>Coming soon...</p>
+            <h3 className="font-semibold text-lg text-white">Follow us</h3>
+            <p className="text-gray-400 dark:text-gray-500 mt-3 transition-colors duration-300">Coming soon...</p>
           </div>
         </div>
-        <div style={{ borderTop: '1px solid #1f2937', marginTop: 48, paddingTop: 24, textAlign: 'center', color: '#9ca3af' }}>
+        <div className="border-t border-gray-800 dark:border-gray-700 mt-12 pt-6 text-center text-gray-400 dark:text-gray-500 transition-colors duration-300">
           <p>© {new Date().getFullYear()} FarmByte. All rights reserved.</p>
         </div>
       </div>

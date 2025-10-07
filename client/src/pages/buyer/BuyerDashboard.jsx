@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import MagicBento from '../../components/MagicBento.jsx'
 import MagicCard from '../../components/MagicCard.jsx'
 
 export default function BuyerDashboard() {
   const { user } = useAuth()
+  const { isDarkMode } = useTheme()
   const navigate = useNavigate()
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -83,9 +85,15 @@ export default function BuyerDashboard() {
 
   if (isLoading) {
     return (
-      <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+      <MagicBento className={`min-h-screen ${isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+        : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
+      }`}>
         <div className="p-6">
-          <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-1/3 mb-6 animate-pulse" />
+          <div className={`h-8 rounded-lg w-1/3 mb-6 animate-pulse ${isDarkMode 
+            ? 'bg-gradient-to-r from-gray-700 to-gray-600' 
+            : 'bg-gradient-to-r from-gray-200 to-gray-300'
+          }`} />
           <div className="grid grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <MagicCard key={i} className="h-64 animate-pulse" />
@@ -97,14 +105,20 @@ export default function BuyerDashboard() {
   }
 
   return (
-    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+    <MagicBento className={`min-h-screen ${isDarkMode 
+      ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+      : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
+    }`}>
       <div className="p-6 space-y-6">
         {/* Welcome Message */}
         <div className="float-animation">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+          <h1 className={`text-4xl font-bold bg-gradient-to-r ${isDarkMode 
+            ? 'from-emerald-400 to-green-300' 
+            : 'from-emerald-700 to-green-600'
+          } bg-clip-text text-transparent`}>
             Welcome back, {buyerName}! 🛒✨
           </h1>
-          <p className="text-gray-600 mt-2">Discover fresh products from local farmers with magical ease</p>
+          <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Discover fresh products from local farmers with magical ease</p>
         </div>
 
         {/* Live Chat Section */}
@@ -117,7 +131,10 @@ export default function BuyerDashboard() {
               </div>
               <Link 
                 to="/chat" 
-                className="px-6 py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className={`px-6 py-3 font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${isDarkMode 
+                  ? 'bg-gray-800 text-green-400 hover:bg-gray-700' 
+                  : 'bg-white text-green-600 hover:bg-green-50'
+                }`}
               >
                 Start Chatting ✨
               </Link>
@@ -127,63 +144,78 @@ export default function BuyerDashboard() {
 
         {/* Featured Products */}
         <MagicCard glowIntensity="intense">
-          <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-xl">
+          <div className={`p-6 rounded-t-xl ${isDarkMode 
+            ? 'bg-gradient-to-r from-blue-900/30 to-cyan-900/30' 
+            : 'bg-gradient-to-r from-blue-50 to-cyan-50'
+          }`}>
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">🌟 Featured Products</h2>
-              <Link to="/buyer/products" className="text-green-600 text-sm font-medium hover:text-green-700 transition-colors">
+              <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>🌟 Featured Products</h2>
+              <Link to="/buyer/products" className={`text-sm font-medium transition-colors ${isDarkMode 
+                ? 'text-green-400 hover:text-green-300' 
+                : 'text-green-600 hover:text-green-700'
+              }`}>
                 Browse All Products →
               </Link>
             </div>
           </div>
           <div className="p-6">
             {featuredProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-600">
+              <div className={`text-center py-8 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 <span className="text-6xl opacity-50">📦</span>
                 <p className="mt-4 text-lg">No featured products available</p>
-                <Link to="/buyer/products" className="text-green-600 hover:text-green-700 mt-2 inline-block font-medium">
+                <Link to="/buyer/products" className={`mt-2 inline-block font-medium ${isDarkMode 
+                  ? 'text-green-400 hover:text-green-300' 
+                  : 'text-green-600 hover:text-green-700'
+                }`}>
                   Browse Products
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {featuredProducts.slice(0, 6).map((product) => (
                   <MagicCard key={product._id} className="overflow-hidden" glowIntensity="medium">
-                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                    <div className={`aspect-[4/3] overflow-hidden ${isDarkMode 
+                      ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
+                      : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                    }`}>
                       <img 
                         src={product.images?.[0] || '/placeholder.svg'} 
                         alt={product.title} 
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-110" 
                       />
                     </div>
-                    <div className="p-4">
-                      <div className="space-y-2">
-                        <h3 className="font-semibold text-gray-900 text-lg">{product.title}</h3>
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                    <div className="p-3">
+                      <div className="space-y-1.5">
+                        <h3 className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{product.title}</h3>
+                        <p className={`text-xs line-clamp-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           {product.description || 'Fresh produce from local farmers'}
                         </p>
-                        <div className="pt-2">
+                        <div className="pt-1">
                           <div className="flex items-center justify-between mb-2">
                             <div>
-                              <span className="text-xl font-bold text-green-600">₹{product.price}</span>
-                              <span className="text-sm text-gray-500">/{product.unit || 'kg'}</span>
+                              <span className={`text-lg font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>₹{product.price}</span>
+                              <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>/{product.unit || 'kg'}</span>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1.5">
                             <Link 
                               to="/buyer/products" 
-                              className="flex-1 px-3 py-2 bg-green-500 text-white text-center text-sm font-medium rounded-lg hover:bg-green-600 transition-colors"
+                              className="flex-1 px-2 py-1.5 bg-green-500 text-white text-center text-xs font-medium rounded-md hover:bg-green-600 transition-colors"
                             >
                               Add to Cart
                             </Link>
                             <button
                               onClick={() => handleChatWithFarmer(product)}
-                              className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                              className="flex-1 px-2 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 transition-colors"
                             >
                               💬 Chat
                             </button>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 border-t pt-2">
+                        <div className={`text-xs pt-1.5 border-t ${isDarkMode 
+                          ? 'text-gray-400 border-gray-700' 
+                          : 'text-gray-500 border-gray-200'
+                        }`}>
                           by {product.sellerId?.email}
                         </div>
                       </div>

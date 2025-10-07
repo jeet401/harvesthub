@@ -326,16 +326,16 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
       {/* Conversations Sidebar */}
-      <div className="w-1/3 bg-white shadow-lg border-r border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Messages</h2>
+      <div className="w-1/3 bg-white dark:bg-gray-800 shadow-lg border-r border-gray-200 dark:border-gray-700 transition-colors duration-300">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 transition-colors duration-300">Messages</h2>
         </div>
         
         <div className="overflow-y-auto h-full">
           {conversations.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400 transition-colors duration-300">
               No conversations yet
             </div>
           ) : (
@@ -345,21 +345,21 @@ const Chat = () => {
                 <div
                   key={conversation._id}
                   onClick={() => setSelectedConversation(conversation)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedConversation?._id === conversation._id ? 'bg-green-50 border-green-200' : ''
+                  className={`p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300 ${
+                    selectedConversation?._id === conversation._id ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700' : ''
                   }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-gray-800">
+                        <h3 className="font-medium text-gray-800 dark:text-gray-200 transition-colors duration-300">
                           {otherParticipant?.userId.email}
                         </h3>
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           otherParticipant?.role === 'farmer' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
+                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                            : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                        } transition-colors duration-300`}>
                           {otherParticipant?.role}
                         </span>
                       </div>
@@ -414,10 +414,10 @@ const Chat = () => {
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="bg-white p-4 border-b border-gray-200 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-300">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="font-semibold text-gray-800">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 transition-colors duration-300">
                     {getOtherParticipant(selectedConversation)?.userId.email}
                   </h3>
                   {selectedConversation.productId && (
@@ -430,15 +430,15 @@ const Chat = () => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
               {messages.map((message) => {
                 const isOwn = message.senderId._id === user.id;
                 return (
                   <div key={message._id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg transition-colors duration-300 ${
                       isOwn 
                         ? 'bg-green-500 text-white' 
-                        : 'bg-white text-gray-800 shadow-sm border border-gray-200'
+                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm border border-gray-200 dark:border-gray-700'
                     }`}>
                       {message.messageType === 'price_offer' && (
                         <div className="mb-2">
@@ -497,10 +497,10 @@ const Chat = () => {
             </div>
 
             {/* Message Input */}
-            <div className="bg-white p-4 border-t border-gray-200">
+            <div className="bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
               {/* Make Offer Button for Buyers */}
               {selectedConversation.productId && user.role === 'buyer' && (
-                <div className="mb-3 pb-3 border-b border-gray-100">
+                <div className="mb-3 pb-3 border-b border-gray-100 dark:border-gray-700 transition-colors duration-300">
                   <button
                     onClick={() => setShowOfferModal(true)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"

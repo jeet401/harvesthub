@@ -155,23 +155,23 @@ const FarmerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-background min-h-screen transition-colors duration-300">
         <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Loading...</div>
+          <div className="text-lg text-foreground">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900/20 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent mb-2">
             Welcome back, {user?.name || 'Farmer'}! ✨
           </h1>
-          <p className="text-gray-600">Manage your crop listings and track your sales with magical precision</p>
+          <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">Manage your crop listings and track your sales with magical precision</p>
         </div>
 
         {/* Live Chat Section */}

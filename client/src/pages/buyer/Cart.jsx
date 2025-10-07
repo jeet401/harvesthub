@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { Button } from '../../components/ui/button'
 import { useCart } from '../../contexts/CartContext.jsx'
+import { useTheme } from '../../contexts/ThemeContext.jsx'
 import MagicBento from '../../components/MagicBento.jsx'
 import MagicCard from '../../components/MagicCard.jsx'
 
@@ -15,6 +16,7 @@ export default function Cart() {
     removeFromCart, 
     fetchCart 
   } = useCart()
+  const { isDarkMode } = useTheme()
 
   useEffect(() => {
     fetchCart()
@@ -52,18 +54,24 @@ export default function Cart() {
   }
 
   return (
-    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+    <MagicBento className={`min-h-screen ${isDarkMode 
+      ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+      : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
+    }`}>
       <div className="p-6 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">Shopping Cart ✨</h1>
-          <p className="text-gray-600">{cartItems.length} item{cartItems.length !== 1 ? 's' : ''} in your cart</p>
+          <h1 className={`text-3xl font-bold mb-2 bg-gradient-to-r ${isDarkMode 
+            ? 'from-emerald-400 to-green-300' 
+            : 'from-emerald-700 to-green-600'
+          } bg-clip-text text-transparent`}>Shopping Cart ✨</h1>
+          <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{cartItems.length} item{cartItems.length !== 1 ? 's' : ''} in your cart</p>
         </div>
 
         {cartItems.length === 0 ? (
           <MagicCard className="text-center py-12" glowIntensity="medium">
             <span className="text-5xl opacity-50">🛒</span>
-            <p className="mt-4 text-lg text-gray-600">Your cart is empty</p>
-            <p className="mt-2 text-gray-500">Add some products to get started</p>
+            <p className={`mt-4 text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your cart is empty</p>
+            <p className={`mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Add some products to get started</p>
             <Link to="/buyer/products" className="inline-block mt-4">
               <Button className="glow-pulse bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-green-400/25">Browse Products</Button>
             </Link>
@@ -76,13 +84,16 @@ export default function Cart() {
                 {cartItems.map((item) => (
                   <MagicCard key={item._id} className="p-4" glowIntensity="medium">
                     <div className="flex gap-4">
-                      <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className={`w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 ${isDarkMode 
+                        ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
+                        : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                      }`}>
                         <img src={item.productId?.images?.[0] || '/placeholder.svg'} alt={item.productId?.title} className="w-full h-full object-cover transition-transform duration-300 hover:scale-110" />
                       </div>
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <h3 className="font-semibold text-gray-900 mb-1">{item.productId?.title}</h3>
-                          <p className="text-sm text-gray-600">₹{item.priceAtAdd}/kg</p>
+                          <h3 className={`font-semibold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{item.productId?.title}</h3>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>₹{item.priceAtAdd}/kg</p>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -105,14 +116,20 @@ export default function Cart() {
                             </Button>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-lg font-semibold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+                            <span className={`text-lg font-semibold bg-gradient-to-r ${isDarkMode 
+                              ? 'from-emerald-400 to-green-300' 
+                              : 'from-emerald-700 to-green-600'
+                            } bg-clip-text text-transparent`}>
                               ₹{item.priceAtAdd * item.quantity}
                             </span>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => removeItem(item._id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 glow-pulse"
+                              className={`glow-pulse ${isDarkMode 
+                                ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
+                                : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                              }`}
                             >
                               Remove
                             </Button>
@@ -128,20 +145,26 @@ export default function Cart() {
             {/* Order Summary */}
             <div>
               <MagicCard className="sticky top-6 p-6" glowIntensity="high">
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent mb-4">Order Summary</h3>
+                <h3 className={`text-lg font-semibold mb-4 bg-gradient-to-r ${isDarkMode 
+                  ? 'from-emerald-400 to-green-300' 
+                  : 'from-emerald-700 to-green-600'
+                } bg-clip-text text-transparent`}>Order Summary</h3>
                 
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">₹{subtotal}</span>
+                    <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Subtotal</span>
+                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{subtotal}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="font-medium">₹50</span>
+                    <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Shipping</span>
+                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹50</span>
                   </div>
-                  <div className="flex justify-between pt-2 border-t border-green-200">
-                    <span className="text-lg font-semibold">Total</span>
-                    <span className="text-lg font-semibold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">₹{subtotal + 50}</span>
+                  <div className={`flex justify-between pt-2 border-t ${isDarkMode ? 'border-gray-600' : 'border-green-200'}`}>
+                    <span className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Total</span>
+                    <span className={`text-lg font-semibold bg-gradient-to-r ${isDarkMode 
+                      ? 'from-emerald-400 to-green-300' 
+                      : 'from-emerald-700 to-green-600'
+                    } bg-clip-text text-transparent`}>₹{subtotal + 50}</span>
                   </div>
 
                   <Button
@@ -152,7 +175,10 @@ export default function Cart() {
                     Proceed to Checkout
                   </Button>
 
-                  <Link to="/buyer/products" className="block text-center text-green-600 hover:text-green-700 hover:underline text-sm transition-colors duration-200">
+                  <Link to="/buyer/products" className={`block text-center hover:underline text-sm transition-colors duration-200 ${isDarkMode 
+                    ? 'text-green-400 hover:text-green-300' 
+                    : 'text-green-600 hover:text-green-700'
+                  }`}>
                     Continue Shopping
                   </Link>
                 </div>

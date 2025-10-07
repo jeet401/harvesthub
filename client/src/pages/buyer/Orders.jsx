@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Package, Check, Truck, MapPin, Phone, MessageCircle, Calendar, DollarSign } from 'lucide-react';
+import { Package, Check, Truck, MapPin, Phone, MessageCircle, Calendar, DollarSign, User } from 'lucide-react';
 import MagicBento from '../../components/MagicBento';
 import MagicCard from '../../components/MagicCard';
 
-const OrderTracking = () => {
+const Orders = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const [orders, setOrders] = useState([]);
@@ -20,7 +19,7 @@ const OrderTracking = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('/api/orders/farmer', {
+      const response = await fetch('/api/orders/buyer', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -43,15 +42,17 @@ const OrderTracking = () => {
     {
       id: 'order-001',
       product: 'Organic Wheat',
-      buyer: 'Rajesh Kumar',
+      farmer: 'Rajesh Kumar',
       quantity: 500,
       totalAmount: 12500,
       orderDate: '2025-01-18',
-      expectedDelivery: '2025-01-15',
+      expectedDelivery: '2025-01-25',
       status: 'shipped',
       progress: 75,
       trackingId: 'TRKORDER-001',
       location: 'Delhi, approaching destination',
+      farmerEmail: 'rajesh.farmer@example.com',
+      farmerPhone: '+91 98765 43210',
       steps: [
         { name: 'Order Placed', completed: true, icon: Package },
         { name: 'Confirmed', completed: true, icon: Check },
@@ -62,20 +63,43 @@ const OrderTracking = () => {
     {
       id: 'order-002',
       product: 'Basmati Rice',
-      buyer: 'Priya Sharma',
+      farmer: 'Priya Sharma',
       quantity: 300,
       totalAmount: 15000,
       orderDate: '2025-01-20',
-      expectedDelivery: '2025-01-25',
+      expectedDelivery: '2025-01-27',
       status: 'confirmed',
       progress: 50,
       trackingId: 'TRKORDER-002',
       location: 'Order confirmed, preparing for shipment',
+      farmerEmail: 'priya.farmer@example.com',
+      farmerPhone: '+91 87654 32109',
       steps: [
         { name: 'Order Placed', completed: true, icon: Package },
         { name: 'Confirmed', completed: true, current: true, icon: Check },
         { name: 'Shipped', completed: false, icon: Truck },
         { name: 'Delivered', completed: false, icon: MapPin }
+      ]
+    },
+    {
+      id: 'order-003',
+      product: 'Fresh Tomatoes',
+      farmer: 'Suresh Kumar',
+      quantity: 50,
+      totalAmount: 2000,
+      orderDate: '2025-01-15',
+      expectedDelivery: '2025-01-22',
+      status: 'delivered',
+      progress: 100,
+      trackingId: 'TRKORDER-003',
+      location: 'Delivered successfully',
+      farmerEmail: 'suresh.farmer@example.com',
+      farmerPhone: '+91 76543 21098',
+      steps: [
+        { name: 'Order Placed', completed: true, icon: Package },
+        { name: 'Confirmed', completed: true, icon: Check },
+        { name: 'Shipped', completed: true, icon: Truck },
+        { name: 'Delivered', completed: true, current: true, icon: MapPin }
       ]
     }
   ];
@@ -94,7 +118,6 @@ const OrderTracking = () => {
   };
 
   const getStatusColor = (status) => {
-    const baseClass = isDarkMode ? 'dark:' : '';
     switch (status) {
       case 'confirmed':
         return `bg-blue-100 text-blue-800 ${isDarkMode ? 'dark:bg-blue-900/30 dark:text-blue-300' : ''}`;
@@ -122,7 +145,7 @@ const OrderTracking = () => {
             <div className={`text-lg bg-gradient-to-r ${isDarkMode 
               ? 'from-emerald-400 to-green-300' 
               : 'from-emerald-700 to-green-600'
-            } bg-clip-text text-transparent`}>Loading magical orders... ✨</div>
+            } bg-clip-text text-transparent`}>Loading your magical orders... ✨</div>
           </div>
         </div>
       </MagicBento>
@@ -141,7 +164,7 @@ const OrderTracking = () => {
             ? 'from-emerald-400 to-green-300' 
             : 'from-emerald-700 to-green-600'
           } bg-clip-text text-transparent mb-2`}>
-            📦 Order Tracking ✨
+            🛒 My Orders ✨
           </h1>
           <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Track your orders and communicate with farmers with magical precision</p>
         </div>
@@ -179,7 +202,7 @@ const OrderTracking = () => {
           <MagicCard className="p-8 text-center" glowIntensity="low">
             <Package className={`h-12 w-12 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} mx-auto mb-4`} />
             <h3 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>No {activeTab} orders</h3>
-            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Orders will appear here once customers start placing them</p>
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Orders will appear here once you start placing them</p>
           </MagicCard>
         ) : (
           <div className="space-y-6">
@@ -188,7 +211,7 @@ const OrderTracking = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{order.product}</h3>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Order ID: {order.id} • From {order.buyer}</p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Order ID: {order.id} • From {order.farmer}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(order.status)}`}>
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -314,10 +337,10 @@ const OrderTracking = () => {
                       ? 'bg-gradient-to-br from-gray-600 to-gray-700' 
                       : 'bg-gradient-to-br from-gray-300 to-gray-400'
                     }`}>
-                      <span className="text-sm font-bold text-white">{order.buyer.charAt(0)}</span>
+                      <span className="text-sm font-bold text-white">{order.farmer.charAt(0)}</span>
                     </div>
                     <div>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{order.buyer}</p>
+                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{order.farmer}</p>
                       <div className="flex items-center space-x-1">
                         <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>⭐ 4.8 (127 reviews)</span>
                       </div>
@@ -344,4 +367,4 @@ const OrderTracking = () => {
   );
 };
 
-export default OrderTracking;
+export default Orders;
