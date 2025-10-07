@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
@@ -8,6 +8,7 @@ import MagicCard from '../../components/MagicCard.jsx'
 
 export default function BuyerDashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [buyerName, setBuyerName] = useState('')
@@ -49,7 +50,36 @@ export default function BuyerDashboard() {
     }
   }
 
+  const handleChatWithFarmer = async (product) => {
+    if (!user || user.role !== 'buyer') {
+      alert('Please login as a buyer to chat with farmers.')
+      return
+    }
 
+    try {
+      const response = await fetch('http://localhost:5000/api/chat/conversations', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          participantId: product.sellerId._id || product.sellerId,
+          productId: product._id,
+          initialMessage: `Hi! I'm interested in your ${product.title}. Can we discuss the price?`
+        })
+      })
+
+      if (response.ok) {
+        navigate('/chat')
+      } else {
+        alert('Failed to start conversation. Please try again.')
+      }
+    } catch (error) {
+      console.error('Chat initiation error:', error)
+      alert('Failed to start conversation. Please try again.')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -76,6 +106,24 @@ export default function BuyerDashboard() {
           </h1>
           <p className="text-gray-600 mt-2">Discover fresh products from local farmers with magical ease</p>
         </div>
+
+        {/* Live Chat Section */}
+        <MagicCard glowIntensity="magical" className="bg-gradient-to-r from-green-500 to-emerald-600">
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold mb-2 text-gray-100">💬 Live Chat with Farmers</h2>
+                <p className="text-green-100">Connect directly with farmers for price negotiations and custom orders</p>
+              </div>
+              <Link 
+                to="/chat" 
+                className="px-6 py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Start Chatting ✨
+              </Link>
+            </div>
+          </div>
+        </MagicCard>
 
         {/* Featured Products */}
         <MagicCard glowIntensity="intense">
@@ -113,14 +161,27 @@ export default function BuyerDashboard() {
                         <p className="text-sm text-gray-600 line-clamp-2">
                           {product.description || 'Fresh produce from local farmers'}
                         </p>
-                        <div className="flex items-center justify-between pt-2">
-                          <div>
-                            <span className="text-xl font-bold text-green-600">₹{product.price}</span>
-                            <span className="text-sm text-gray-500">/{product.unit || 'kg'}</span>
+                        <div className="pt-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <span className="text-xl font-bold text-green-600">₹{product.price}</span>
+                              <span className="text-sm text-gray-500">/{product.unit || 'kg'}</span>
+                            </div>
                           </div>
-                          <Link to="/buyer/products" className="text-xs text-green-600 hover:text-green-700 font-medium transition-colors">
-                            View Details
-                          </Link>
+                          <div className="flex gap-2">
+                            <Link 
+                              to="/buyer/products" 
+                              className="flex-1 px-3 py-2 bg-green-500 text-white text-center text-sm font-medium rounded-lg hover:bg-green-600 transition-colors"
+                            >
+                              Add to Cart
+                            </Link>
+                            <button
+                              onClick={() => handleChatWithFarmer(product)}
+                              className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              💬 Chat
+                            </button>
+                          </div>
                         </div>
                         <div className="text-xs text-gray-500 border-t pt-2">
                           by {product.sellerId?.email}

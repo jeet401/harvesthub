@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useCart } from '../../contexts/CartContext.jsx'
@@ -10,6 +10,7 @@ import MagicCard from '../../components/MagicCard.jsx'
 export default function Products() {
   const { user } = useAuth()
   const { addToCart: addToCartContext } = useCart()
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -213,6 +214,39 @@ export default function Products() {
     }
   }
 
+  const handleChatWithFarmer = async (product) => {
+    if (!user || user.role !== 'buyer') {
+      alert('Please login as a buyer to chat with farmers.')
+      return
+    }
+
+    try {
+      // Create or find conversation with this farmer for this product
+      const response = await fetch('http://localhost:5000/api/chat/conversations', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          participantId: product.sellerId._id || product.sellerId,
+          productId: product._id,
+          initialMessage: `Hi! I'm interested in your ${product.title}. Can we discuss the price?`
+        })
+      })
+
+      if (response.ok) {
+        // Navigate to chat page
+        navigate('/chat')
+      } else {
+        alert('Failed to start conversation. Please try again.')
+      }
+    } catch (error) {
+      console.error('Chat initiation error:', error)
+      alert('Failed to start conversation. Please try again.')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -297,18 +331,32 @@ export default function Products() {
                   <p className="text-sm text-gray-600 mb-3 leading-relaxed">
                     {product.description || 'Fresh produce from local farmers'}
                   </p>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <span className="text-xl font-bold text-primary">₹{product.price}</span>
-                      <span className="text-sm text-muted-foreground">/{product.unit || 'kg'}</span>
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-xl font-bold text-primary">₹{product.price}</span>
+                        <span className="text-sm text-muted-foreground">/{product.unit || 'kg'}</span>
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => handleAddToCart(product._id)}
-                      size="sm"
-                      disabled={cartLoading === product._id || !user}
-                    >
-                      {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleAddToCart(product._id)}
+                        size="sm"
+                        disabled={cartLoading === product._id || !user}
+                        className="flex-1"
+                      >
+                        {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
+                      </Button>
+                      <Button
+                        onClick={() => handleChatWithFarmer(product)}
+                        size="sm"
+                        variant="outline"
+                        disabled={!user || user.role !== 'buyer'}
+                        className="flex-1"
+                      >
+                        💬 Chat
+                      </Button>
+                    </div>
                   </div>
                   <div className="text-xs text-muted-foreground border-t border-border pt-2">
                     by {product.sellerId?.email}

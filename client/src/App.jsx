@@ -22,6 +22,7 @@ import OrderTracking from './pages/farmer/OrderTracking.jsx'
 import AddProduct from './pages/farmer/AddProduct.jsx'
 import FarmerSignUpSuccess from './pages/auth/FarmerSignUpSuccess.jsx'
 import TestPage from './pages/TestPage.jsx'
+import Chat from './pages/Chat.jsx'
 
 
 function Placeholder({ title }) {
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/farmer/products/add" element={<AddProduct />} />
             <Route path="/farmer/products/:id" element={<ProductDetail />} />
             <Route path="/farmer/orders" element={<OrderTracking />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/test" element={<TestPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<Placeholder title="User Management" />} />

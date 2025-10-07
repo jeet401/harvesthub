@@ -15,7 +15,7 @@ router.get('/', authRequired, async (req, res) => {
 
 router.post('/add', authRequired, async (req, res) => {
   try {
-    const { productId, quantity = 1 } = req.body;
+    const { productId, quantity = 1, customPrice } = req.body;
     
     const product = await Product.findById(productId);
     if (!product) {
@@ -30,13 +30,20 @@ router.post('/add', authRequired, async (req, res) => {
     
     const existingItem = cart.items.find(item => item.productId.toString() === productId);
     
+    // Use custom price if provided (from negotiations), otherwise use product price
+    const priceToUse = customPrice !== undefined ? customPrice : product.price;
+    
     if (existingItem) {
       existingItem.quantity += quantity;
+      // Update price if a custom price is provided (e.g., from negotiation)
+      if (customPrice !== undefined) {
+        existingItem.priceAtAdd = customPrice;
+      }
     } else {
       cart.items.push({
         productId,
         quantity,
-        priceAtAdd: product.price
+        priceAtAdd: priceToUse
       });
     }
     

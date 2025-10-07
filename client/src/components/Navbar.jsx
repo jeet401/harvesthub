@@ -12,9 +12,7 @@ export function Navbar() {
   const { cartCount } = useCart()
   const navigate = useNavigate()
 
-  // Debug: Log user state
-  console.log('Navbar - User state:', user)
-  console.log('Navbar - Loading state:', loading)
+  // User state management
 
   const handleLogout = async () => {
     try {
@@ -98,6 +96,15 @@ export function Navbar() {
                         >
                           <Package className="w-4 h-4 text-green-600" />
                           My Orders
+                        </Link>
+                      )}
+                      {(user.role === 'farmer' || user.role === 'buyer') && (
+                        <Link 
+                          to="/chat" 
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="w-4 h-4 text-purple-600">💬</span>
+                          Live Chat
                         </Link>
                       )}
                       {user.role === 'admin' && (

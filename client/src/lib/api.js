@@ -33,6 +33,7 @@ export const api = {
   
   // Products
   getProducts: (params) => request(`/api/products${params ? '?' + new URLSearchParams(params).toString() : ''}`),
+  getMyProducts: (params) => request(`/api/products/my-products${params ? '?' + new URLSearchParams(params).toString() : ''}`),
   getProduct: (id) => request(`/api/products/${id}`),
   getCategories: () => request('/api/products/categories'),
   

@@ -3,7 +3,7 @@ import { X, Save, Upload } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 
-const EditProductModal = ({ product, isOpen, onClose, onSave }) => {
+const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
   const [formData, setFormData] = useState({
     name: '',
     quantity: '',
@@ -115,14 +115,14 @@ const EditProductModal = ({ product, isOpen, onClose, onSave }) => {
 
     // Fallback: Save to localStorage (for user-added products or when API fails)
     try {
-      const userProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
+      const userProducts = JSON.parse(localStorage.getItem(`farmerProducts_${userId}`) || '[]');
       const isUserProduct = userProducts.find(p => p._id === product._id);
       
       if (isUserProduct) {
         const updatedUserProducts = userProducts.map(p => 
           p._id === product._id ? updatedProduct : p
         );
-        localStorage.setItem('farmerProducts', JSON.stringify(updatedUserProducts));
+        localStorage.setItem(`farmerProducts_${userId}`, JSON.stringify(updatedUserProducts));
       }
     } catch (error) {
       console.error('Error saving to localStorage:', error);
