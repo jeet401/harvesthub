@@ -470,7 +470,7 @@ export default function Products() {
           <div className="flex gap-2 flex-wrap">
             {categories.map(category => (
               <Button
-                key={category.id}
+                key={category._id || category.id || category.name}
                 variant={selectedCategory === category.name ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(selectedCategory === category.name ? '' : category.name)}

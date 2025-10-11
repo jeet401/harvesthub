@@ -4,7 +4,7 @@ const ACCESS_TTL = '15m';
 const REFRESH_TTL = '7d';
 
 function signAccessToken(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET || 'change_me_in_prod', { expiresIn: ACCESS_TTL });
+  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET || 'change_me_in_prod', { expiresIn: ACCESS_TTL });
 }
 
 function signRefreshToken(payload) {

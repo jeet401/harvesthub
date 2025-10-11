@@ -8,9 +8,9 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">FB</span>
+                <span className="text-white font-bold text-sm">HH</span>
               </div>
-              <span className="font-bold text-xl text-green-400">FarmByte</span>
+              <span className="font-bold text-xl text-green-400">HarvestHub</span>
             </div>
             <p className="text-gray-400 dark:text-gray-500 transition-colors duration-300">Connecting buyers with farmers for fresh, local produce.</p>
           </div>
@@ -26,7 +26,7 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg text-white">Contact</h3>
             <div className="text-gray-400 dark:text-gray-500 mt-3 transition-colors duration-300">
-              <p>support@farmbyte.com</p>
+              <p>support@harvesthub.com</p>
               <p>+91 12345 67890</p>
             </div>
           </div>
@@ -36,7 +36,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 dark:border-gray-700 mt-12 pt-6 text-center text-gray-400 dark:text-gray-500 transition-colors duration-300">
-          <p>© {new Date().getFullYear()} FarmByte. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} HarvestHub. All rights reserved.</p>
         </div>
       </div>
     </footer>

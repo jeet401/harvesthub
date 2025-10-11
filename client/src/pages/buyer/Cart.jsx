@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { Button } from '../../components/ui/button'
 import { useCart } from '../../contexts/CartContext.jsx'
@@ -17,6 +17,7 @@ export default function Cart() {
     fetchCart 
   } = useCart()
   const { isDarkMode } = useTheme()
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchCart()
@@ -36,8 +37,8 @@ export default function Cart() {
   }
 
   const proceedToCheckout = () => {
-    // Navigate to checkout
-    window.location.href = '/buyer/checkout'
+    // Navigate to checkout using React Router
+    navigate('/buyer/checkout')
   }
 
   if (isLoading) {

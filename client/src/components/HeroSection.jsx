@@ -19,7 +19,7 @@ export default function HeroSection() {
         </div>
         <div style={{ position: 'relative' }}>
           <div style={{ aspectRatio: '1 / 1', borderRadius: 16, overflow: 'hidden', background: 'linear-gradient(135deg,#bbf7d0,#a7f3d0)', padding: 24 }}>
-            <img src="/farmers-market-with-fresh-vegetables-and-fruits--p.png" alt="FarmByte Marketplace" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
+            <img src="/farmers-market-with-fresh-vegetables-and-fruits--p.png" alt="HarvestHub Marketplace" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
           </div>
           <div style={{ position: 'absolute', top: -16, left: -16, background: '#fff', borderRadius: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', padding: 12, border: '1px solid #e5e7eb' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

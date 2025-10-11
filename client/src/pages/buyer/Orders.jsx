@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Button } from '../../components/ui/button';
-import { Package, Check, Truck, MapPin, Phone, MessageCircle, Calendar, DollarSign, User } from 'lucide-react';
+import { api } from '../../lib/api';
+import { Package, Eye, Clock, CheckCircle, XCircle, Truck, MapPin, MessageCircle, DollarSign, Calendar, Receipt, X } from 'lucide-react';
 import MagicBento from '../../components/MagicBento';
 import MagicCard from '../../components/MagicCard';
 
@@ -10,8 +11,9 @@ const Orders = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const [orders, setOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('active');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showBreakdown, setShowBreakdown] = useState(null); // Track which order's breakdown to show
 
   useEffect(() => {
     fetchOrders();
@@ -19,120 +21,90 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('/api/orders/buyer', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      const data = await response.json();
-      
-      if (response.ok) {
-        setOrders(data.orders || mockOrders);
-      }
+      setLoading(true);
+      setError('');
+      console.log('Fetching orders...');
+      const response = await api.getOrders();
+      console.log('Orders response:', response);
+      setOrders(response.orders || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      setOrders(mockOrders); // Fallback to mock data
+      setError('Failed to load orders');
+      setOrders([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Mock data for demonstration
-  const mockOrders = [
-    {
-      id: 'order-001',
-      product: 'Organic Wheat',
-      farmer: 'Rajesh Kumar',
-      quantity: 500,
-      totalAmount: 12500,
-      orderDate: '2025-01-18',
-      expectedDelivery: '2025-01-25',
-      status: 'shipped',
-      progress: 75,
-      trackingId: 'TRKORDER-001',
-      location: 'Delhi, approaching destination',
-      farmerEmail: 'rajesh.farmer@example.com',
-      farmerPhone: '+91 98765 43210',
-      steps: [
-        { name: 'Order Placed', completed: true, icon: Package },
-        { name: 'Confirmed', completed: true, icon: Check },
-        { name: 'Shipped', completed: true, current: true, icon: Truck },
-        { name: 'Delivered', completed: false, icon: MapPin }
-      ]
-    },
-    {
-      id: 'order-002',
-      product: 'Basmati Rice',
-      farmer: 'Priya Sharma',
-      quantity: 300,
-      totalAmount: 15000,
-      orderDate: '2025-01-20',
-      expectedDelivery: '2025-01-27',
-      status: 'confirmed',
-      progress: 50,
-      trackingId: 'TRKORDER-002',
-      location: 'Order confirmed, preparing for shipment',
-      farmerEmail: 'priya.farmer@example.com',
-      farmerPhone: '+91 87654 32109',
-      steps: [
-        { name: 'Order Placed', completed: true, icon: Package },
-        { name: 'Confirmed', completed: true, current: true, icon: Check },
-        { name: 'Shipped', completed: false, icon: Truck },
-        { name: 'Delivered', completed: false, icon: MapPin }
-      ]
-    },
-    {
-      id: 'order-003',
-      product: 'Fresh Tomatoes',
-      farmer: 'Suresh Kumar',
-      quantity: 50,
-      totalAmount: 2000,
-      orderDate: '2025-01-15',
-      expectedDelivery: '2025-01-22',
-      status: 'delivered',
-      progress: 100,
-      trackingId: 'TRKORDER-003',
-      location: 'Delivered successfully',
-      farmerEmail: 'suresh.farmer@example.com',
-      farmerPhone: '+91 76543 21098',
-      steps: [
-        { name: 'Order Placed', completed: true, icon: Package },
-        { name: 'Confirmed', completed: true, icon: Check },
-        { name: 'Shipped', completed: true, icon: Truck },
-        { name: 'Delivered', completed: true, current: true, icon: MapPin }
-      ]
-    }
-  ];
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-  const getOrdersByStatus = (status) => {
-    switch (status) {
-      case 'active':
-        return orders.filter(order => ['confirmed', 'shipped'].includes(order.status));
-      case 'completed':
-        return orders.filter(order => order.status === 'delivered');
+  const getStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'confirmed':
+      case 'paid':
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'pending':
+        return <Clock className="w-5 h-5 text-yellow-500" />;
+      case 'processing':
+        return <Package className="w-5 h-5 text-blue-500" />;
+      case 'shipped':
+        return <Truck className="w-5 h-5 text-indigo-500" />;
+      case 'delivered':
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
       case 'cancelled':
-        return orders.filter(order => order.status === 'cancelled');
+        return <XCircle className="w-5 h-5 text-red-500" />;
       default:
-        return orders;
+        return <Package className="w-5 h-5 text-gray-500" />;
     }
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'confirmed':
-        return `bg-blue-100 text-blue-800 ${isDarkMode ? 'dark:bg-blue-900/30 dark:text-blue-300' : ''}`;
+      case 'paid':
+        return isDarkMode ? 'text-green-400 bg-green-900/30' : 'text-green-600 bg-green-50';
+      case 'pending':
+        return isDarkMode ? 'text-yellow-400 bg-yellow-900/30' : 'text-yellow-600 bg-yellow-50';
+      case 'processing':
+        return isDarkMode ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-50';
       case 'shipped':
-        return `bg-purple-100 text-purple-800 ${isDarkMode ? 'dark:bg-purple-900/30 dark:text-purple-300' : ''}`;
+        return isDarkMode ? 'text-indigo-400 bg-indigo-900/30' : 'text-indigo-600 bg-indigo-50';
       case 'delivered':
-        return `bg-green-100 text-green-800 ${isDarkMode ? 'dark:bg-green-900/30 dark:text-green-300' : ''}`;
+        return isDarkMode ? 'text-green-500 bg-green-900/30' : 'text-green-700 bg-green-100';
       case 'cancelled':
-        return `bg-red-100 text-red-800 ${isDarkMode ? 'dark:bg-red-900/30 dark:text-red-300' : ''}`;
+        return isDarkMode ? 'text-red-400 bg-red-900/30' : 'text-red-600 bg-red-50';
       default:
-        return `bg-gray-100 text-gray-800 ${isDarkMode ? 'dark:bg-gray-800 dark:text-gray-300' : ''}`;
+        return isDarkMode ? 'text-gray-400 bg-gray-800' : 'text-gray-600 bg-gray-50';
     }
   };
 
-  const filteredOrders = getOrdersByStatus(activeTab);
+  const getProgressByStatus = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 10;
+      case 'confirmed':
+      case 'paid':
+        return 25;
+      case 'processing':
+        return 50;
+      case 'shipped':
+        return 75;
+      case 'delivered':
+        return 100;
+      case 'cancelled':
+        return 0;
+      default:
+        return 25;
+    }
+  };
 
   if (loading) {
     return (
@@ -140,12 +112,12 @@ const Orders = () => {
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
         : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
       }`}>
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className={`text-lg bg-gradient-to-r ${isDarkMode 
-              ? 'from-emerald-400 to-green-300' 
-              : 'from-emerald-700 to-green-600'
-            } bg-clip-text text-transparent`}>Loading your magical orders... ✨</div>
+        <div className="p-6 max-w-6xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-300 rounded w-1/4"></div>
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-32 bg-gray-300 rounded"></div>
+            ))}
           </div>
         </div>
       </MagicBento>
@@ -157,211 +129,386 @@ const Orders = () => {
       ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
       : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
     }`}>
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className={`text-4xl font-bold bg-gradient-to-r ${isDarkMode 
-            ? 'from-emerald-400 to-green-300' 
-            : 'from-emerald-700 to-green-600'
-          } bg-clip-text text-transparent mb-2`}>
-            🛒 My Orders ✨
+          <h1 className={`text-3xl font-bold mb-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            My Orders 📦
           </h1>
-          <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Track your orders and communicate with farmers with magical precision</p>
+          <p className={`text-lg ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            Track your purchases and delivery status
+          </p>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6">
-          <MagicCard className="p-1 max-w-md" glowIntensity="low">
-            <div className="flex space-x-1">
-              {[
-                { key: 'active', label: 'Active', count: getOrdersByStatus('active').length },
-                { key: 'completed', label: 'Completed', count: getOrdersByStatus('completed').length },
-                { key: 'cancelled', label: 'Cancelled', count: getOrdersByStatus('cancelled').length }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    activeTab === tab.key
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                      : `${isDarkMode 
-                          ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }`
-                  }`}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </div>
-          </MagicCard>
-        </div>
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
 
-        {/* Orders List */}
-        {filteredOrders.length === 0 ? (
-          <MagicCard className="p-8 text-center" glowIntensity="low">
-            <Package className={`h-12 w-12 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} mx-auto mb-4`} />
-            <h3 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>No {activeTab} orders</h3>
-            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Orders will appear here once you start placing them</p>
+        {orders.length === 0 ? (
+          <MagicCard className={`text-center py-12 ${
+            isDarkMode 
+              ? 'bg-gray-800/50 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
+            <Package className={`w-16 h-16 mx-auto mb-4 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-300'
+            }`} />
+            <h3 className={`text-xl font-semibold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              No Orders Yet
+            </h3>
+            <p className={`mb-6 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              You haven't placed any orders yet. Start shopping to see your orders here.
+            </p>
+            <Link 
+              to="/buyer/products"
+              className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors inline-block"
+            >
+              Start Shopping
+            </Link>
           </MagicCard>
         ) : (
-          <div className="space-y-6">
-            {filteredOrders.map((order) => (
-              <MagicCard key={order.id} className="p-6" glowIntensity="medium">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{order.product}</h3>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Order ID: {order.id} • From {order.farmer}</p>
+          <div className="space-y-4">
+            {orders.map((order) => (
+              <MagicCard
+                key={order._id}
+                className={`overflow-hidden transition-all hover:shadow-xl ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-800/70' 
+                    : 'bg-white border-gray-200 hover:shadow-lg'
+                }`}
+              >
+                {/* Header with Product Name and Status */}
+                <div className="p-6 pb-0">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className={`text-lg font-semibold mb-1 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {order.items?.[0]?.productId?.title || order.items?.[0]?.productId?.name || 'Order'} 
+                        {order.items?.length > 1 && ` + ${order.items.length - 1} more`}
+                      </h3>
+                      <p className={`text-sm mb-2 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Order ID: {order._id?.slice(-8)?.toUpperCase() || 'N/A'} • From {order.items?.[0]?.sellerId?.name || 'Farmer'}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                      {order.status?.charAt(0)?.toUpperCase() + order.status?.slice(1) || 'Confirmed'}
+                    </span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${getStatusColor(order.status)}`}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div className="flex items-center space-x-2">
-                    <div className={`p-2 rounded-lg ${isDarkMode 
-                      ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
-                      : 'bg-gradient-to-br from-gray-100 to-gray-200'
-                    }`}>
-                      <Package className={`h-5 w-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                  {/* Order Progress and Metrics */}
+                  <div className="grid grid-cols-4 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                      }`}>
+                        <Package className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Quantity
+                      </p>
+                      <p className={`text-sm font-bold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} items
+                      </p>
                     </div>
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Quantity</p>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{order.quantity} kg</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`p-2 rounded-lg ${isDarkMode 
-                      ? 'bg-gradient-to-br from-green-900/30 to-emerald-900/30' 
-                      : 'bg-gradient-to-br from-green-100 to-emerald-100'
-                    }`}>
-                      <DollarSign className={`h-5 w-5 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-                    </div>
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Total Amount</p>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{order.totalAmount.toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`p-2 rounded-lg ${isDarkMode 
-                      ? 'bg-gradient-to-br from-blue-900/30 to-cyan-900/30' 
-                      : 'bg-gradient-to-br from-blue-100 to-cyan-100'
-                    }`}>
-                      <Calendar className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                    </div>
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Order Date</p>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{new Date(order.orderDate).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`p-2 rounded-lg ${isDarkMode 
-                      ? 'bg-gradient-to-br from-purple-900/30 to-violet-900/30' 
-                      : 'bg-gradient-to-br from-purple-100 to-violet-100'
-                    }`}>
-                      <Truck className={`h-5 w-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-                    </div>
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Expected Delivery</p>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{new Date(order.expectedDelivery).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Progress Bar */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Order Progress ✨</span>
-                    <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{order.progress}%</span>
-                  </div>
-                  <div className={`w-full rounded-full h-3 shadow-inner ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                    <div 
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500 shadow-sm glow-pulse" 
-                      style={{ width: `${order.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
+                    <div className="text-center">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                      }`}>
+                        <DollarSign className="w-5 h-5 text-green-500" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Total Amount
+                      </p>
+                      <p className={`text-sm font-bold ${
+                        isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                      }`}>
+                        ₹{order.totalAmount || order.total || order.amount || 0}
+                      </p>
+                    </div>
 
-                {/* Progress Steps */}
-                <div className="flex items-center justify-between mb-6">
-                  {order.steps.map((step, index) => {
-                    const Icon = step.icon;
-                    return (
-                      <div key={step.name} className="flex flex-col items-center">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
-                          step.completed 
-                            ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white glow-pulse' 
-                            : step.current 
-                            ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white'
-                            : 'bg-gray-300 text-gray-500'
-                        }`}>
-                          <Icon className="h-6 w-6" />
+                    <div className="text-center">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                      }`}>
+                        <Calendar className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Order Date
+                      </p>
+                      <p className={`text-sm font-bold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {formatDate(order.createdAt).split(',')[0]}
+                      </p>
+                    </div>
+
+                    <div className="text-center">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                      }`}>
+                        <Truck className="w-5 h-5 text-purple-500" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Expected Delivery
+                      </p>
+                      <p className={`text-sm font-bold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : '7-10 days'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Order Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-sm font-medium ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        Order Progress 🚀
+                      </span>
+                      <span className={`text-sm font-bold ${
+                        isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                      }`}>
+                        {order.progress || getProgressByStatus(order.status)}%
+                      </span>
+                    </div>
+                    <div className={`w-full bg-gray-200 rounded-full h-2 ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}>
+                      <div 
+                        className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full transition-all duration-500" 
+                        style={{ width: `${order.progress || getProgressByStatus(order.status)}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between mt-2">
+                      <div className={`flex items-center text-xs ${
+                        (order.progress || getProgressByStatus(order.status)) >= 25 ? 'text-emerald-500' : isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full mr-1 ${
+                          (order.progress || getProgressByStatus(order.status)) >= 25 ? 'bg-emerald-500' : isDarkMode ? 'bg-gray-600' : 'bg-gray-300'
+                        }`}></div>
+                        Order Placed
+                      </div>
+                      <div className={`flex items-center text-xs ${
+                        (order.progress || getProgressByStatus(order.status)) >= 50 ? 'text-emerald-500' : isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full mr-1 ${
+                          (order.progress || getProgressByStatus(order.status)) >= 50 ? 'bg-emerald-500' : isDarkMode ? 'bg-gray-600' : 'bg-gray-300'
+                        }`}></div>
+                        Confirmed
+                      </div>
+                      <div className={`flex items-center text-xs ${
+                        (order.progress || getProgressByStatus(order.status)) >= 75 ? 'text-emerald-500' : isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full mr-1 ${
+                          (order.progress || getProgressByStatus(order.status)) >= 75 ? 'bg-emerald-500' : isDarkMode ? 'bg-gray-600' : 'bg-gray-300'
+                        }`}></div>
+                        Shipped
+                      </div>
+                      <div className={`flex items-center text-xs ${
+                        (order.progress || getProgressByStatus(order.status)) >= 100 ? 'text-emerald-500' : isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full mr-1 ${
+                          (order.progress || getProgressByStatus(order.status)) >= 100 ? 'bg-emerald-500' : isDarkMode ? 'bg-gray-600' : 'bg-gray-300'
+                        }`}></div>
+                        Delivered
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tracking Information */}
+                  {order.trackingId && (
+                    <div className={`mb-4 p-3 rounded-lg ${
+                      isDarkMode ? 'bg-blue-900/30 border border-blue-800' : 'bg-blue-50 border border-blue-200'
+                    }`}>
+                      <div className="flex items-center text-blue-600 dark:text-blue-400">
+                        <Truck className="w-4 h-4 mr-2" />
+                        <span className="text-sm font-medium">Your order is on the way! 🚛</span>
+                      </div>
+                      <p className="text-xs mt-1 text-blue-600 dark:text-blue-400">
+                        Tracking ID: {order.trackingId}
+                      </p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        📍 Last seen: Delhi, approaching destination
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Farmer Information */}
+                  {order.items?.[0]?.sellerId && (
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-sm">
+                            {order.items[0].sellerId.name?.charAt(0)?.toUpperCase() || 'F'}
+                          </span>
                         </div>
-                        <span className={`text-xs mt-2 text-center ${
-                          step.completed || step.current 
-                            ? `font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}` 
-                            : `${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            {order.items[0].sellerId.name || order.items[0].sellerId.email || 'Unknown Farmer'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setShowBreakdown(showBreakdown === order._id ? null : order._id)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            isDarkMode 
+                              ? 'bg-green-900/30 text-green-400 hover:bg-green-900/50' 
+                              : 'bg-green-50 text-green-600 hover:bg-green-100'
+                          }`}
+                          title="Cost Breakdown"
+                        >
+                          <Receipt className="w-4 h-4" />
+                        </button>
+                        <Link
+                          to={`/chat?orderId=${order._id}&sellerId=${order.items[0].sellerId._id}`}
+                          className={`p-2 rounded-lg transition-colors ${
+                            isDarkMode 
+                              ? 'bg-blue-900/30 text-blue-400 hover:bg-blue-900/50' 
+                              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                          }`}
+                          title="Chat with Farmer"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Link>
+                        <Link
+                          to={`/buyer/order-success?orderId=${order._id}`}
+                          className={`p-2 rounded-lg transition-colors ${
+                            isDarkMode 
+                              ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cost Breakdown */}
+                  {showBreakdown === order._id && (
+                    <div className={`mt-4 p-4 rounded-lg border ${
+                      isDarkMode 
+                        ? 'bg-gray-700/30 border-gray-600' 
+                        : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className={`font-semibold flex items-center ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>
-                          {step.name}
-                        </span>
+                          <Receipt className="w-4 h-4 mr-2" />
+                          Cost Breakdown
+                        </h4>
+                        <button
+                          onClick={() => setShowBreakdown(null)}
+                          className={`p-1 rounded-lg transition-colors ${
+                            isDarkMode 
+                              ? 'hover:bg-gray-600 text-gray-400' 
+                              : 'hover:bg-gray-200 text-gray-600'
+                          }`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* Status Update */}
-                <div className={`rounded-xl p-4 mb-4 shadow-sm border-2 ${isDarkMode 
-                  ? 'bg-gradient-to-r from-blue-900/20 to-cyan-900/20 border-blue-700/50' 
-                  : 'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200'
-                }`}>
-                  <div className="flex items-start space-x-3">
-                    <div className={`p-2 rounded-full shadow-lg ${isDarkMode 
-                      ? 'bg-gradient-to-br from-blue-800/50 to-cyan-800/50' 
-                      : 'bg-gradient-to-br from-blue-100 to-cyan-100'
-                    }`}>
-                      <Truck className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                    </div>
-                    <div>
-                      <h4 className={`font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-900'}`}>Your order is on the way! 🚚</h4>
-                      <p className={`text-sm mt-1 ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>Tracking ID: {order.trackingId}</p>
-                      <p className={`text-sm mt-1 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>📍 Last seen: {order.location}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Farmer Info & Actions */}
-                <div className={`flex items-center justify-between pt-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${isDarkMode 
-                      ? 'bg-gradient-to-br from-gray-600 to-gray-700' 
-                      : 'bg-gradient-to-br from-gray-300 to-gray-400'
-                    }`}>
-                      <span className="text-sm font-bold text-white">{order.farmer.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{order.farmer}</p>
-                      <div className="flex items-center space-x-1">
-                        <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>⭐ 4.8 (127 reviews)</span>
+                      
+                      <div className="space-y-2">
+                        {/* Item Breakdown */}
+                        <div className="space-y-1">
+                          {order.items?.map((item, index) => (
+                            <div key={index} className={`flex justify-between text-sm ${
+                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
+                              <span>
+                                {item.productId?.title || item.productId?.name} × {item.quantity}
+                              </span>
+                              <span>₹{(item.priceAtPurchase || item.productId?.price || 0) * item.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <hr className={`my-2 ${
+                          isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                        }`} />
+                        
+                        {/* Cost Summary */}
+                        <div className={`space-y-1 text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          <div className="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>₹{order.subtotal || 0}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Shipping:</span>
+                            <span>₹{order.shippingCharges || 0}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Taxes (5%):</span>
+                            <span>₹{order.taxes || 0}</span>
+                          </div>
+                        </div>
+                        
+                        <hr className={`my-2 ${
+                          isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                        }`} />
+                        
+                        <div className={`flex justify-between font-semibold ${
+                          isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                        }`}>
+                          <span>Total Amount:</span>
+                          <span>₹{order.totalAmount || order.total || order.amount || 0}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-300">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call
-                    </Button>
-                    <Button variant="outline" size="sm" className="shadow-sm hover:shadow-lg transition-all duration-300">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Chat
-                    </Button>
-                  </div>
+                  )}
                 </div>
               </MagicCard>
             ))}
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="mt-8 text-center">
+          <Link 
+            to="/buyer/products"
+            className={`inline-block px-6 py-3 rounded-lg transition-colors font-medium ${
+              isDarkMode 
+                ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+            }`}
+          >
+            Continue Shopping
+          </Link>
+        </div>
       </div>
     </MagicBento>
   );
