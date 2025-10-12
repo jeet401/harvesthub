@@ -102,17 +102,7 @@ const MagicCard = ({
         }}
       />
       
-      {/* CSS for shine animation */}
-      <style jsx>{`
-        @keyframes shine {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
+
     </div>
   );
 };

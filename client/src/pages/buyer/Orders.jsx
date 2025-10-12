@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { api } from '../../lib/api';
-import { Package, Eye, Clock, CheckCircle, XCircle, Truck, MapPin, MessageCircle, DollarSign, Calendar, Receipt, X } from 'lucide-react';
+import { Package, Eye, Clock, CheckCircle, XCircle, Truck, MapPin, MessageCircle, DollarSign, Calendar, Receipt, X, CheckCircle2 } from 'lucide-react';
 import MagicBento from '../../components/MagicBento';
 import MagicCard from '../../components/MagicCard';
 
@@ -14,6 +14,8 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showBreakdown, setShowBreakdown] = useState(null); // Track which order's breakdown to show
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'delivered'
+  const [receivingOrder, setReceivingOrder] = useState(null); // Track which order is being marked as received
 
   useEffect(() => {
     fetchOrders();
@@ -106,6 +108,40 @@ const Orders = () => {
     }
   };
 
+  const handleMarkAsReceived = async (orderId) => {
+    try {
+      setReceivingOrder(orderId);
+      console.log('Marking order as received:', orderId);
+      
+      await api.markOrderAsReceived(orderId);
+      
+      // Update the local state
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === orderId 
+            ? { ...order, status: 'delivered', progress: 100, actualDelivery: new Date() }
+            : order
+        )
+      );
+      
+      console.log('Order marked as received successfully');
+    } catch (error) {
+      console.error('Error marking order as received:', error);
+      setError('Failed to mark order as received');
+    } finally {
+      setReceivingOrder(null);
+    }
+  };
+
+  // Filter orders based on delivery status
+  const pendingOrders = orders.filter(order => 
+    !['delivered'].includes(order.status?.toLowerCase())
+  );
+  
+  const deliveredOrders = orders.filter(order => 
+    order.status?.toLowerCase() === 'delivered'
+  );
+
   if (loading) {
     return (
       <MagicBento className={`min-h-screen ${isDarkMode 
@@ -137,11 +173,43 @@ const Orders = () => {
           }`}>
             My Orders 📦
           </h1>
-          <p className={`text-lg ${
+          <p className={`text-lg mb-6 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
             Track your purchases and delivery status
           </p>
+          
+          {/* Tabs for Order Status */}
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'pending'
+                  ? isDarkMode
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-emerald-600 text-white'
+                  : isDarkMode
+                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              To be Delivered ({pendingOrders.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('delivered')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'delivered'
+                  ? isDarkMode
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-emerald-600 text-white'
+                  : isDarkMode
+                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Delivered ({deliveredOrders.length})
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -150,7 +218,7 @@ const Orders = () => {
           </div>
         )}
 
-        {orders.length === 0 ? (
+        {(activeTab === 'pending' ? pendingOrders : deliveredOrders).length === 0 ? (
           <MagicCard className={`text-center py-12 ${
             isDarkMode 
               ? 'bg-gray-800/50 border-gray-700' 
@@ -162,12 +230,15 @@ const Orders = () => {
             <h3 className={`text-xl font-semibold mb-2 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              No Orders Yet
+              {activeTab === 'pending' ? 'No Pending Orders' : 'No Delivered Orders'}
             </h3>
             <p className={`mb-6 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              You haven't placed any orders yet. Start shopping to see your orders here.
+              {activeTab === 'pending' 
+                ? "You don't have any orders to be delivered. Start shopping to see your orders here."
+                : "You don't have any delivered orders yet. Complete some orders to see them here."
+              }
             </p>
             <Link 
               to="/buyer/products"
@@ -178,7 +249,7 @@ const Orders = () => {
           </MagicCard>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
+            {(activeTab === 'pending' ? pendingOrders : deliveredOrders).map((order) => (
               <MagicCard
                 key={order._id}
                 className={`overflow-hidden transition-all hover:shadow-xl ${
@@ -209,77 +280,85 @@ const Orders = () => {
                   </div>
 
                   {/* Order Progress and Metrics */}
-                  <div className="grid grid-cols-4 gap-4 mb-4">
-                    <div className="text-center">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                  <div className="flex justify-between items-center gap-6 mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-white shadow-sm'
                       }`}>
                         <Package className="w-5 h-5 text-emerald-500" />
                       </div>
-                      <p className={`text-xs font-medium ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Quantity
-                      </p>
-                      <p className={`text-sm font-bold ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} items
-                      </p>
+                      <div>
+                        <p className={`text-xs font-medium ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          Quantity
+                        </p>
+                        <p className={`text-sm font-bold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} items
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="text-center">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    <div className="flex items-center space-x-3">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-white shadow-sm'
                       }`}>
                         <DollarSign className="w-5 h-5 text-green-500" />
                       </div>
-                      <p className={`text-xs font-medium ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Total Amount
-                      </p>
-                      <p className={`text-sm font-bold ${
-                        isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
-                      }`}>
-                        ₹{order.totalAmount || order.total || order.amount || 0}
-                      </p>
+                      <div>
+                        <p className={`text-xs font-medium ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          Total Amount
+                        </p>
+                        <p className={`text-sm font-bold ${
+                          isDarkMode ? 'text-emerald-400' : 'text-emerald-600'
+                        }`}>
+                          ₹{order.totalAmount || order.total || order.amount || 0}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="text-center">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    <div className="flex items-center space-x-3">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-white shadow-sm'
                       }`}>
                         <Calendar className="w-5 h-5 text-blue-500" />
                       </div>
-                      <p className={`text-xs font-medium ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Order Date
-                      </p>
-                      <p className={`text-sm font-bold ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        {formatDate(order.createdAt).split(',')[0]}
-                      </p>
+                      <div>
+                        <p className={`text-xs font-medium ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          Order Date
+                        </p>
+                        <p className={`text-sm font-bold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {formatDate(order.createdAt).split(',')[0]}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="text-center">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    <div className="flex items-center space-x-3">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-white shadow-sm'
                       }`}>
                         <Truck className="w-5 h-5 text-purple-500" />
                       </div>
-                      <p className={`text-xs font-medium ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Expected Delivery
-                      </p>
-                      <p className={`text-sm font-bold ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        {order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : '7-10 days'}
-                      </p>
+                      <div>
+                        <p className={`text-xs font-medium ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          Expected Delivery
+                        </p>
+                        <p className={`text-sm font-bold ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : '7-10 days'}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -388,6 +467,31 @@ const Orders = () => {
                         >
                           <Receipt className="w-4 h-4" />
                         </button>
+                        
+                        {/* Mark as Received Button - Only show for shipped orders */}
+                        {(order.status?.toLowerCase() === 'shipped' || order.status?.toLowerCase() === 'confirmed' || order.status?.toLowerCase() === 'paid') && activeTab === 'pending' && (
+                          <button
+                            onClick={() => handleMarkAsReceived(order._id)}
+                            disabled={receivingOrder === order._id}
+                            className={`p-2 rounded-lg transition-colors ${
+                              receivingOrder === order._id
+                                ? isDarkMode 
+                                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : isDarkMode 
+                                  ? 'bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50' 
+                                  : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                            }`}
+                            title="Mark as Received"
+                          >
+                            {receivingOrder === order._id ? (
+                              <div className="w-4 h-4 animate-spin border-2 border-current border-t-transparent rounded-full" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
+                        
                         <Link
                           to={`/chat?orderId=${order._id}&sellerId=${order.items[0].sellerId._id}`}
                           className={`p-2 rounded-lg transition-colors ${

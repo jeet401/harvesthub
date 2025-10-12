@@ -75,6 +75,7 @@ export const api = {
   getFarmerOrders: () => request('/api/orders/farmer'),
   getOrder: (id) => request(`/api/orders/${id}`),
   updateOrderStatus: (id, body) => request(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify(body) }),
+  markOrderAsReceived: (id) => request(`/api/orders/${id}/received`, { method: 'PUT' }),
   
   // Payment
   createOrder: (body) => request('/api/payment/create-order', { method: 'POST', body: JSON.stringify(body) }),

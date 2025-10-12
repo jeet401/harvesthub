@@ -158,7 +158,7 @@ router.put('/:id', authRequired, async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
     
-    if (product.sellerId.toString() !== req.user.id) {
+    if (product.sellerId.toString() !== req.user.sub) {
       return res.status(403).json({ message: 'Not authorized to update this product' });
     }
     
@@ -184,7 +184,7 @@ router.delete('/:id', authRequired, async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
     
-    if (product.sellerId.toString() !== req.user.id) {
+    if (product.sellerId.toString() !== req.user.sub) {
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
     

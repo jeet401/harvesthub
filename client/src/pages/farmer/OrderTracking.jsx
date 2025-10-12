@@ -15,6 +15,8 @@ const OrderTracking = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showBreakdown, setShowBreakdown] = useState(null);
+  const [activeTab, setActiveTab] = useState('ongoing'); // 'ongoing' or 'completed'
+  const [updatingOrder, setUpdatingOrder] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -24,19 +26,38 @@ const OrderTracking = () => {
     try {
       setLoading(true);
       setError('');
-      console.log('Fetching farmer orders...');
+      console.log('Fetching farmer orders for user:', user?.sub || 'No user ID');
       
       const data = await api.getFarmerOrders();
       console.log('Farmer orders response:', data);
+      console.log('Number of orders received:', data?.orders?.length || 0);
+      
+      if (data?.orders?.length === 0) {
+        console.log('No orders found for farmer. This could mean:');
+        console.log('1. No products have been ordered yet');
+        console.log('2. User ID mismatch between buyer orders and farmer products');
+        console.log('3. Database connection issues');
+      }
+      
       setOrders(data.orders || []);
     } catch (error) {
       console.error('Error fetching farmer orders:', error);
+      console.error('Error details:', error.message);
       setError('Failed to load orders');
       setOrders([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Filter orders based on completion status
+  const ongoingOrders = orders.filter(order => 
+    !['delivered', 'cancelled', 'refunded'].includes(order.status?.toLowerCase())
+  );
+  
+  const completedOrders = orders.filter(order => 
+    ['delivered', 'cancelled', 'refunded'].includes(order.status?.toLowerCase())
+  );
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -55,8 +76,6 @@ const OrderTracking = () => {
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'pending':
         return <Clock className="w-5 h-5 text-yellow-500" />;
-      case 'processing':
-        return <Package className="w-5 h-5 text-blue-500" />;
       case 'shipped':
         return <Truck className="w-5 h-5 text-indigo-500" />;
       case 'delivered':
@@ -75,8 +94,6 @@ const OrderTracking = () => {
         return isDarkMode ? 'text-green-400 bg-green-900/30' : 'text-green-600 bg-green-50';
       case 'pending':
         return isDarkMode ? 'text-yellow-400 bg-yellow-900/30' : 'text-yellow-600 bg-yellow-50';
-      case 'processing':
-        return isDarkMode ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-50';
       case 'shipped':
         return isDarkMode ? 'text-indigo-400 bg-indigo-900/30' : 'text-indigo-600 bg-indigo-50';
       case 'delivered':
@@ -90,15 +107,26 @@ const OrderTracking = () => {
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
+      setUpdatingOrder(orderId);
       console.log('Updating order status:', { orderId, newStatus, user });
+      
       const result = await api.updateOrderStatus(orderId, { status: newStatus });
       console.log('Order status updated successfully:', result);
-      // Refresh orders after update
-      fetchOrders();
+      
+      // Update local state immediately for better UX
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+      
+      console.log('Order status updated successfully');
     } catch (error) {
       console.error('Error updating order status:', error);
       console.error('Error details:', error.message);
-      alert(`Failed to update order status: ${error.message}`);
+      setError(`Failed to update order status: ${error.message}`);
+    } finally {
+      setUpdatingOrder(null);
     }
   };
 
@@ -131,13 +159,45 @@ const OrderTracking = () => {
           <h1 className={`text-3xl font-bold mb-2 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            Order Management 📦
+            Order Management �
           </h1>
-          <p className={`text-lg ${
+          <p className={`text-lg mb-6 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
             Track and manage orders for your products
           </p>
+          
+          {/* Tabs for Order Status */}
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setActiveTab('ongoing')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'ongoing'
+                  ? isDarkMode
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-emerald-600 text-white'
+                  : isDarkMode
+                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Ongoing Orders ({ongoingOrders.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'completed'
+                  ? isDarkMode
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-emerald-600 text-white'
+                  : isDarkMode
+                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Completed ({completedOrders.length})
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -146,7 +206,7 @@ const OrderTracking = () => {
           </div>
         )}
 
-        {orders.length === 0 ? (
+        {(activeTab === 'ongoing' ? ongoingOrders : completedOrders).length === 0 ? (
           <MagicCard className={`text-center py-12 ${
             isDarkMode 
               ? 'bg-gray-800/50 border-gray-700' 
@@ -158,17 +218,20 @@ const OrderTracking = () => {
             <h3 className={`text-xl font-semibold mb-2 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              No Orders Yet
+              {activeTab === 'ongoing' ? 'No Ongoing Orders' : 'No Completed Orders'}
             </h3>
             <p className={`mb-6 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              You haven't received any orders for your products yet.
+              {activeTab === 'ongoing' 
+                ? "You don't have any ongoing orders. New orders will appear here when customers purchase your products."
+                : "You don't have any completed orders yet. Delivered and cancelled orders will appear here."
+              }
             </p>
           </MagicCard>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
+            {(activeTab === 'ongoing' ? ongoingOrders : completedOrders).map((order) => (
               <MagicCard
                 key={order._id}
                 className={`p-6 transition-all hover:shadow-xl ${
@@ -198,7 +261,7 @@ const OrderTracking = () => {
                         <span className={`text-sm ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-600'
                         }`}>
-                          Buyer: {order.buyer || order.userId?.email || 'Unknown'}
+                          Buyer: {typeof order.buyer === 'string' ? order.buyer : order.buyer?.email || order.userId?.email || 'Unknown'}
                         </span>
                       </div>
                     </div>
@@ -284,28 +347,31 @@ const OrderTracking = () => {
                       <Receipt className="w-4 h-4 mr-1" />
                       Cost Breakdown
                     </button>
-                    {order.status?.toLowerCase() === 'confirmed' && (
+                    {(order.status?.toLowerCase() === 'pending') && (
                       <Button
-                        onClick={() => updateOrderStatus(order._id, 'processing')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1"
+                        onClick={() => updateOrderStatus(order._id, 'confirmed')}
+                        disabled={updatingOrder === order._id}
+                        className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 disabled:opacity-50"
                       >
-                        Mark Processing
+                        {updatingOrder === order._id ? 'Confirming...' : 'Confirm Order'}
                       </Button>
                     )}
-                    {order.status?.toLowerCase() === 'processing' && (
+                    {(order.status?.toLowerCase() === 'confirmed' || order.status?.toLowerCase() === 'paid') && (
                       <Button
                         onClick={() => updateOrderStatus(order._id, 'shipped')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-3 py-1"
+                        disabled={updatingOrder === order._id}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-3 py-1 disabled:opacity-50"
                       >
-                        Mark Shipped
+                        {updatingOrder === order._id ? 'Shipping...' : 'Mark as Shipped'}
                       </Button>
                     )}
                     {order.status?.toLowerCase() === 'shipped' && (
                       <Button
                         onClick={() => updateOrderStatus(order._id, 'delivered')}
-                        className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1"
+                        disabled={updatingOrder === order._id}
+                        className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 disabled:opacity-50"
                       >
-                        Mark Delivered
+                        {updatingOrder === order._id ? 'Delivering...' : 'Mark as Delivered'}
                       </Button>
                     )}
                     {order.userId && (
@@ -379,7 +445,7 @@ const OrderTracking = () => {
                       }`}>
                         <div className="flex justify-between">
                           <span>Buyer:</span>
-                          <span>{order.buyer || order.userId?.email || 'Unknown'}</span>
+                          <span>{typeof order.buyer === 'string' ? order.buyer : order.buyer?.email || order.userId?.email || 'Unknown'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Order Date:</span>
