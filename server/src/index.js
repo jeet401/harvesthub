@@ -46,6 +46,7 @@ app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/payment', require('./routes/payment'));
 app.use('/api/chat', require('./routes/chat')); // Chat routes
+app.use('/api/analytics', require('./routes/analytics')); // Analytics routes
 
 // Socket.io connection handling
 require('./lib/socket')(io);

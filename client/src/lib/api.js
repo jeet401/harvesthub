@@ -80,6 +80,21 @@ export const api = {
   // Payment
   createOrder: (body) => request('/api/payment/create-order', { method: 'POST', body: JSON.stringify(body) }),
   verifyPayment: (body) => request('/api/payment/verify', { method: 'POST', body: JSON.stringify(body) }),
+  
+  // Analytics
+  getFarmerAnalytics: () => request('/api/analytics/farmer'),
+  getBuyerAnalytics: (params = {}) => {
+    const queryString = new URLSearchParams(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
+    ).toString();
+    return request(`/api/analytics/buyer${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  // Chat
+  getConversations: () => request('/api/chat/conversations'),
+  createConversation: (body) => request('/api/chat/conversations', { method: 'POST', body: JSON.stringify(body) }),
+  getMessages: (conversationId) => request(`/api/chat/conversations/${conversationId}/messages`),
+  sendMessage: (conversationId, body) => request(`/api/chat/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify(body) }),
 }
 
 export default api

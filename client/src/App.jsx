@@ -23,6 +23,8 @@ import ProductDetail from './pages/farmer/ProductDetail.jsx'
 import OrderTracking from './pages/farmer/OrderTracking.jsx'
 import AddProduct from './pages/farmer/AddProduct.jsx'
 import FarmerSignUpSuccess from './pages/auth/FarmerSignUpSuccess.jsx'
+import FarmerAnalytics from './pages/farmer/Analytics.jsx'
+import BuyerAnalytics from './pages/buyer/Analytics.jsx'
 import TestPage from './pages/TestPage.jsx'
 import Chat from './pages/Chat.jsx'
 
@@ -62,6 +64,8 @@ export default function App() {
             <Route path="/farmer/products/add" element={<AddProduct />} />
             <Route path="/farmer/products/:id" element={<ProductDetail />} />
             <Route path="/farmer/orders" element={<OrderTracking />} />
+            <Route path="/farmer/analytics" element={<FarmerAnalytics />} />
+            <Route path="/buyer/analytics" element={<BuyerAnalytics />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/test" element={<TestPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

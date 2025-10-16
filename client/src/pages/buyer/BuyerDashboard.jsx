@@ -4,6 +4,7 @@ import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { TrendingUp, Package, ShoppingCart } from 'lucide-react'
 import MagicBento from '../../components/MagicBento.jsx'
 import MagicCard from '../../components/MagicCard.jsx'
 
@@ -119,6 +120,84 @@ export default function BuyerDashboard() {
             Welcome back, {buyerName}! 🛒✨
           </h1>
           <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Discover fresh products from local farmers with magical ease</p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <MagicCard 
+            className={`p-4 cursor-pointer hover:scale-105 transition-transform ${isDarkMode 
+              ? 'bg-gradient-to-br from-blue-900/50 to-cyan-900/50 border-blue-800' 
+              : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'
+            }`}
+            onClick={() => navigate('/buyer/analytics')}
+            glowIntensity="medium"
+          >
+            <div className="flex items-center">
+              <div className={`p-3 rounded-full mr-4 ${isDarkMode 
+                ? 'bg-blue-800/50' 
+                : 'bg-blue-100'
+              }`}>
+                <TrendingUp className={`h-5 w-5 ${isDarkMode 
+                  ? 'text-blue-400' 
+                  : 'text-blue-600'
+                }`} />
+              </div>
+              <div>
+                <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Analytics</p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Track your spending & orders</p>
+              </div>
+            </div>
+          </MagicCard>
+
+          <MagicCard 
+            className={`p-4 cursor-pointer hover:scale-105 transition-transform ${isDarkMode 
+              ? 'bg-gradient-to-br from-green-900/50 to-emerald-900/50 border-green-800' 
+              : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+            }`}
+            onClick={() => navigate('/buyer/orders')}
+            glowIntensity="medium"
+          >
+            <div className="flex items-center">
+              <div className={`p-3 rounded-full mr-4 ${isDarkMode 
+                ? 'bg-green-800/50' 
+                : 'bg-green-100'
+              }`}>
+                <Package className={`h-5 w-5 ${isDarkMode 
+                  ? 'text-green-400' 
+                  : 'text-green-600'
+                }`} />
+              </div>
+              <div>
+                <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>My Orders</p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>View order history</p>
+              </div>
+            </div>
+          </MagicCard>
+
+          <MagicCard 
+            className={`p-4 cursor-pointer hover:scale-105 transition-transform ${isDarkMode 
+              ? 'bg-gradient-to-br from-purple-900/50 to-violet-900/50 border-purple-800' 
+              : 'bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200'
+            }`}
+            onClick={() => navigate('/buyer/cart')}
+            glowIntensity="medium"
+          >
+            <div className="flex items-center">
+              <div className={`p-3 rounded-full mr-4 ${isDarkMode 
+                ? 'bg-purple-800/50' 
+                : 'bg-purple-100'
+              }`}>
+                <ShoppingCart className={`h-5 w-5 ${isDarkMode 
+                  ? 'text-purple-400' 
+                  : 'text-purple-600'
+                }`} />
+              </div>
+              <div>
+                <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Shopping Cart</p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>View cart items</p>
+              </div>
+            </div>
+          </MagicCard>
         </div>
 
         {/* Live Chat Section */}

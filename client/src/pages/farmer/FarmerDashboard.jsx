@@ -250,7 +250,7 @@ const FarmerDashboard = () => {
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">✨ Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <MagicCard 
               className="p-4" 
               onClick={() => navigate('/farmer/products/add')}
@@ -295,6 +295,22 @@ const FarmerDashboard = () => {
                 <div>
                   <p className="font-medium text-gray-900">Edit Profile</p>
                   <p className="text-sm text-gray-600">Update your farm details</p>
+                </div>
+              </div>
+            </MagicCard>
+
+            <MagicCard 
+              className="p-4" 
+              onClick={() => navigate('/farmer/analytics')}
+              glowIntensity="medium"
+            >
+              <div className="flex items-center">
+                <div className="p-3 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full mr-4 shadow-lg">
+                  <TrendingUp className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Analytics</p>
+                  <p className="text-sm text-gray-600">View sales insights & trends</p>
                 </div>
               </div>
             </MagicCard>
