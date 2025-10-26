@@ -15,6 +15,7 @@
     "vite": "^7.1.7"
   },
   "dependencies": {
+    "framer-motion": "^12.23.22",
     "gsap": "^3.13.0"
   }
 }
