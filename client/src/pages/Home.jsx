@@ -53,16 +53,16 @@ export default function Home() {
   ];
 
   return (
-    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900/20 transition-colors duration-300">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-magical">
+      <section className="py-20 bg-gradient-magical transition-colors duration-300">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="float-animation">
               <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-800 via-green-700 to-teal-600 bg-clip-text text-transparent animate-fade-in-up">
                 Ready to Transform Your Agricultural Business? ✨
               </h1>
-              <p className="text-xl mb-8 leading-relaxed text-gray-700">
+              <p className="text-xl mb-8 leading-relaxed text-gray-700 dark:text-gray-300 transition-colors duration-300">
                 Join thousands of farmers and buyers who are already benefiting from direct, transparent trading with magical efficiency
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -100,7 +100,7 @@ export default function Home() {
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
               Why Choose HarvestHub? 🌟
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto transition-colors duration-300">
               Our platform provides everything you need for successful agricultural trading with magical precision
             </p>
           </div>
@@ -110,11 +110,11 @@ export default function Home() {
               const Icon = feature.icon;
               return (
                 <MagicCard key={index} glowIntensity="medium" className="p-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center mb-4 shadow-lg">
-                    <Icon className="w-6 h-6 text-green-600" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900 dark:to-emerald-900 rounded-lg flex items-center justify-center mb-4 shadow-lg transition-colors duration-300">
+                    <Icon className="w-6 h-6 text-green-600 dark:text-green-400 transition-colors duration-300" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100 transition-colors duration-300">{feature.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">{feature.description}</p>
                 </MagicCard>
               );
             })}
@@ -123,13 +123,13 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-green-50">
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-green-50 dark:from-gray-800 dark:to-emerald-900/20 transition-colors duration-300">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
               How It Works ⚡
             </h2>
-            <p className="text-xl text-gray-700">
+            <p className="text-xl text-gray-700 dark:text-gray-300 transition-colors duration-300">
               Simple steps to start magical trading
             </p>
           </div>
@@ -139,8 +139,8 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg glow-pulse">
                 <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-gray-900">Register & Verify</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 transition-colors duration-300">Register & Verify</h3>
+              <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">
                 Sign up as a farmer or buyer and complete AGMARK verification for quality assurance
               </p>
             </MagicCard>
@@ -149,8 +149,8 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg glow-pulse">
                 <span className="text-2xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-gray-900">List or Browse</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 transition-colors duration-300">List or Browse</h3>
+              <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">
                 Farmers list their crops while buyers browse and post requirements with smart filtering
               </p>
             </MagicCard>
@@ -159,8 +159,8 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg glow-pulse">
                 <span className="text-2xl font-bold text-white">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-gray-900">Trade & Track</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100 transition-colors duration-300">Trade & Track</h3>
+              <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">
                 Connect, negotiate, complete secure payments and track orders in real-time
               </p>
             </MagicCard>
@@ -175,7 +175,7 @@ export default function Home() {
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
               Trusted by Thousands 💫
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-400 transition-colors duration-300">
               See what our magical community says about HarvestHub
             </p>
           </div>
@@ -188,9 +188,9 @@ export default function Home() {
                     <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-1">{testimonial.name}</h4>
-                <p className="text-sm text-gray-500 mb-4">{testimonial.role}</p>
-                <p className="italic text-gray-700">"{testimonial.comment}"</p>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 transition-colors duration-300">{testimonial.name}</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">{testimonial.role}</p>
+                <p className="italic text-gray-700 dark:text-gray-300 transition-colors duration-300">"{testimonial.comment}"</p>
               </MagicCard>
             ))}
           </div>

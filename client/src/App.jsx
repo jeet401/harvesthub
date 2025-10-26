@@ -2,6 +2,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 import { LanguageProvider } from './contexts/LanguageContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { CartProvider } from './contexts/CartContext.jsx'
+import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/auth/Login.jsx'
@@ -14,6 +15,7 @@ import Products from './pages/buyer/Products.jsx'
 import Cart from './pages/buyer/Cart.jsx'
 import Checkout from './pages/buyer/Checkout.jsx'
 import OrderSuccess from './pages/buyer/OrderSuccess.jsx'
+import Orders from './pages/buyer/Orders.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import FarmerDashboard from './pages/farmer/FarmerDashboard.jsx'
 import SimpleFarmerDashboard from './pages/farmer/SimpleFarmerDashboard.jsx'
@@ -21,8 +23,10 @@ import ProductDetail from './pages/farmer/ProductDetail.jsx'
 import OrderTracking from './pages/farmer/OrderTracking.jsx'
 import AddProduct from './pages/farmer/AddProduct.jsx'
 import FarmerSignUpSuccess from './pages/auth/FarmerSignUpSuccess.jsx'
+import FarmerAnalytics from './pages/farmer/Analytics.jsx'
+import BuyerAnalytics from './pages/buyer/Analytics.jsx'
 import TestPage from './pages/TestPage.jsx'
-import TestFarmerPage from './pages/farmer/TestFarmerPage.jsx'
+import Chat from './pages/Chat.jsx'
 
 
 function Placeholder({ title }) {
@@ -35,12 +39,13 @@ function Placeholder({ title }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <CartProvider>
-          <div className="min-h-screen bg-background">
-            <Navbar />
-            <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <div className="min-h-screen bg-background transition-colors duration-300">
+              <Navbar />
+              <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/sign-up" element={<SignUp />} />
@@ -52,13 +57,16 @@ export default function App() {
             <Route path="/buyer/checkout" element={<Checkout />} />
             <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
             <Route path="/buyer/order-success" element={<OrderSuccess />} />
-            <Route path="/buyer/orders" element={<Placeholder title="Buyer Orders" />} />
+            <Route path="/buyer/orders" element={<Orders />} />
             <Route path="/buyer/products" element={<Products />} />
             <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
             <Route path="/farmer/dashboard-simple" element={<SimpleFarmerDashboard />} />
             <Route path="/farmer/products/add" element={<AddProduct />} />
             <Route path="/farmer/products/:id" element={<ProductDetail />} />
             <Route path="/farmer/orders" element={<OrderTracking />} />
+            <Route path="/farmer/analytics" element={<FarmerAnalytics />} />
+            <Route path="/buyer/analytics" element={<BuyerAnalytics />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/test" element={<TestPage />} />
             <Route path="/farmer/test" element={<TestFarmerPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -67,9 +75,10 @@ export default function App() {
             <Route path="/admin/orders" element={<Placeholder title="Order Management" />} />
             <Route path="/admin/analytics" element={<Placeholder title="Analytics" />} />
           </Routes>
-          </div>
-        </CartProvider>
-      </LanguageProvider>
-    </AuthProvider>
+            </div>
+          </CartProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

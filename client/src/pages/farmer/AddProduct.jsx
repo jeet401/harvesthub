@@ -15,6 +15,7 @@ const AddProduct = () => {
     price: '',
     stock: '',
     categoryId: '',
+    qualityGrade: 'A+',
     images: [],
     imageUrls: [] // Support multiple images
   });
@@ -198,6 +199,7 @@ const AddProduct = () => {
           price: '',
           stock: '',
           categoryId: '',
+          qualityGrade: 'A+',
           images: [],
           imageUrls: []
         });
@@ -251,9 +253,9 @@ const AddProduct = () => {
         agmarkCertified: Math.random() > 0.5
       };
 
-      const existingProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
+      const existingProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
       const updatedProducts = [...existingProducts, newProduct];
-      localStorage.setItem('farmerProducts', JSON.stringify(updatedProducts));
+      localStorage.setItem(`farmerProducts_${user.id}`, JSON.stringify(updatedProducts));
 
       alert('Product saved locally for demo!');
       
@@ -379,6 +381,25 @@ const AddProduct = () => {
                   placeholder="500"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quality Grade *
+                </label>
+                <select
+                  name="qualityGrade"
+                  required
+                  value={formData.qualityGrade}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="A+">A+ (Premium)</option>
+                  <option value="A">A (High Quality)</option>
+                  <option value="B+">B+ (Good Quality)</option>
+                  <option value="B">B (Standard Quality)</option>
+                  <option value="C">C (Basic Quality)</option>
+                </select>
               </div>
             </div>
 

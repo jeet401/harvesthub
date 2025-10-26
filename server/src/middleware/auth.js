@@ -8,7 +8,7 @@ const authRequired = (req, res, next) => {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'change_me_in_prod');
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET || 'change_me_in_prod');
     req.user = payload; // This will include sub, role, email
     
     next();

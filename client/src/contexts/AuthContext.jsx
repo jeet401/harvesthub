@@ -12,12 +12,12 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
-  // Check auth function - try to get user from server or localStorage
+  // Check auth function - try to get user from server only
   const checkAuth = async () => {
     try {
       setLoading(true);
       
-      // First try to refresh token with backend
+      // Try to refresh token with backend
       const response = await api.refresh();
       if (response && response.user) {
         setUser(response.user);
@@ -25,17 +25,9 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.log('No valid auth token found');
-      // Check localStorage for demo fallback
-      const savedUser = localStorage.getItem('demoUser');
-      if (savedUser) {
-        try {
-          const parsedUser = JSON.parse(savedUser);
-          setUser(parsedUser);
-          console.log('Auth restored from localStorage:', parsedUser);
-        } catch (e) {
-          console.log('Invalid saved user data');
-        }
-      }
+      // Clear any old localStorage data
+      localStorage.removeItem('demoUser');
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -47,23 +39,13 @@ export function AuthProvider({ children }) {
       console.log('Login response:', response)
       if (response && response.user) {
         setUser(response.user)
-        // Save to localStorage for persistence
-        localStorage.setItem('demoUser', JSON.stringify(response.user))
         return response
       } else {
-        // Fallback to basic user data
-        const fallbackUser = { authenticated: true, role: credentials.role, email: credentials.email }
-        setUser(fallbackUser)
-        localStorage.setItem('demoUser', JSON.stringify(fallbackUser))
-        return { user: fallbackUser }
+        throw new Error('Invalid login response')
       }
     } catch (error) {
       console.error('Login API error:', error)
-      // For demo purposes, allow fallback login
-      const fallbackUser = { authenticated: true, role: credentials.role, email: credentials.email }
-      setUser(fallbackUser)
-      localStorage.setItem('demoUser', JSON.stringify(fallbackUser))
-      return { user: fallbackUser }
+      throw error
     }
   }
 

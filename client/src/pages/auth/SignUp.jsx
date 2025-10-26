@@ -86,18 +86,18 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900/20 flex items-center justify-center p-4 transition-colors duration-300">
       <Card className="w-full max-w-md">
-        <CardHeader className={`${config.bgColor} rounded-t-lg`}>
+        <CardHeader className={`${config.bgColor} dark:bg-gray-800 rounded-t-lg transition-colors duration-300`}>
           <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-white rounded-full shadow-sm">
-              <Icon className={`w-8 h-8 ${config.color}`} />
+            <div className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-sm transition-colors duration-300">
+              <Icon className={`w-8 h-8 ${config.color} dark:text-green-400`} />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900 dark:text-gray-100 transition-colors duration-300">
             {config.title}
           </CardTitle>
-          <p className="text-center text-sm text-gray-600 mt-2">
+          <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-2 transition-colors duration-300">
             {config.description}
           </p>
         </CardHeader>

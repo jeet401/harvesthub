@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { useCart } from '../../contexts/CartContext.jsx'
 import { Button } from '../../components/ui/button'
 import MagicBento from '../../components/MagicBento.jsx'
@@ -9,12 +10,18 @@ import MagicCard from '../../components/MagicCard.jsx'
 
 export default function Products() {
   const { user } = useAuth()
+  const { isDarkMode } = useTheme()
   const { addToCart: addToCartContext } = useCart()
-  const [products, setProducts] = useState([])
+  const navigate = useNavigate()
+  const [allProducts, setAllProducts] = useState([])
+  const [filteredProducts, setFilteredProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const [selectedGrade, setSelectedGrade] = useState('')
+  const [sortBy, setSortBy] = useState('name')
   const [searchParams] = useSearchParams()
   const [cartLoading, setCartLoading] = useState(null)
 
@@ -24,6 +31,11 @@ export default function Products() {
     const categoryParam = searchParams.get('category')
     if (categoryParam) setSelectedCategory(categoryParam)
   }, [searchParams])
+
+  // Dynamic filtering effect
+  useEffect(() => {
+    applyFilters()
+  }, [allProducts, searchTerm, selectedCategory, priceRange, selectedGrade, sortBy])
 
   const fetchProducts = async () => {
     try {
@@ -113,30 +125,19 @@ export default function Products() {
       ];
 
       // Combine all products: API + localStorage + mock (if needed)
-      const allProducts = [
+      const combinedProducts = [
         ...apiProducts,
         ...localStorageProducts,
         ...mockProducts
       ];
 
-      // Filter products based on search term and category
-      let filteredProducts = allProducts;
-      
-      if (searchTerm) {
-        filteredProducts = filteredProducts.filter(product => 
-          product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-      
-      if (selectedCategory) {
-        filteredProducts = filteredProducts.filter(product => 
-          product.category?.name === selectedCategory
-        );
-      }
+      // Add Agmark grades to products if not present
+      const productsWithGrades = combinedProducts.map(product => ({
+        ...product,
+        agmarkGrade: product.agmarkGrade || ['A', 'B', 'C', 'Premium'][Math.floor(Math.random() * 4)]
+      }));
 
-      setProducts(filteredProducts);
+      setAllProducts(productsWithGrades);
     } catch (error) {
       console.error('Products fetch error:', error);
       setProducts([]);
@@ -189,7 +190,72 @@ export default function Products() {
     }
   };
 
-  const filteredProducts = products; // Products are already filtered in fetchProducts
+  const applyFilters = () => {
+    let filtered = [...allProducts];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(product => 
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(product => 
+        product.category?.name === selectedCategory
+      );
+    }
+
+    // Price range filter
+    if (priceRange.min !== '') {
+      filtered = filtered.filter(product => 
+        product.price >= parseFloat(priceRange.min)
+      );
+    }
+    if (priceRange.max !== '') {
+      filtered = filtered.filter(product => 
+        product.price <= parseFloat(priceRange.max)
+      );
+    }
+
+    // Agmark grade filter
+    if (selectedGrade) {
+      filtered = filtered.filter(product => 
+        product.agmarkGrade === selectedGrade
+      );
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return a.price - b.price;
+        case 'price-high':
+          return b.price - a.price;
+        case 'name':
+          return a.title.localeCompare(b.title);
+        case 'grade':
+          const gradeOrder = { 'Premium': 4, 'A': 3, 'B': 2, 'C': 1 };
+          return (gradeOrder[b.agmarkGrade] || 0) - (gradeOrder[a.agmarkGrade] || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredProducts(filtered);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('');
+    setPriceRange({ min: '', max: '' });
+    setSelectedGrade('');
+    setSortBy('name');
+  };
 
   const handleAddToCart = async (productId) => {
     if (!user) {
@@ -213,51 +279,198 @@ export default function Products() {
     }
   }
 
+  const handleChatWithFarmer = async (product) => {
+    if (!user || user.role !== 'buyer') {
+      alert('Please login as a buyer to chat with farmers.')
+      return
+    }
+
+    try {
+      // Create or find conversation with this farmer for this product
+      const response = await fetch('http://localhost:5000/api/chat/conversations', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          participantId: product.sellerId._id || product.sellerId,
+          productId: product._id,
+          initialMessage: `Hi! I'm interested in your ${product.title}. Can we discuss the price?`
+        })
+      })
+
+      if (response.ok) {
+        // Navigate to chat page
+        navigate('/chat')
+      } else {
+        alert('Failed to start conversation. Please try again.')
+      }
+    } catch (error) {
+      console.error('Chat initiation error:', error)
+      alert('Failed to start conversation. Please try again.')
+    }
+  }
+
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="h-8 bg-gray-200 rounded-lg w-1/3 mb-6" />
-        <div className="grid grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-80 bg-gray-200 rounded-lg" />
-          ))}
+      <MagicBento className={`min-h-screen ${isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+        : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
+      }`}>
+        <div className="p-6">
+          <div className={`h-8 rounded-lg w-1/3 mb-6 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`} />
+          <div className="grid grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <MagicCard key={i} className="h-80 animate-pulse" />
+            ))}
+          </div>
         </div>
-      </div>
+      </MagicBento>
     )
   }
 
   return (
-    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+    <MagicBento className={`min-h-screen ${isDarkMode 
+      ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+      : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
+    }`}>
       <div className="p-6">
         <div className="mb-6">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+          <h1 className={`text-4xl font-bold mb-4 bg-gradient-to-r ${isDarkMode 
+            ? 'from-emerald-400 to-green-300' 
+            : 'from-emerald-700 to-green-600'
+          } bg-clip-text text-transparent`}>
             Browse Products ✨
           </h1>
           
-          <div className="flex gap-4 mb-6 flex-wrap">
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-3 rounded-lg border-2 border-gray-300 min-w-[300px] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300"
-            />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 rounded-lg border-2 border-gray-300 min-w-[200px] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300"
-            >
-              <option value="">All Categories</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.name}>{category.name}</option>
-              ))}
-            </select>
-          </div>
+          {/* Search and Filters */}
+          <MagicCard className="p-6 mb-6" glowIntensity="low">
+            <div className="space-y-4">
+              {/* Search Bar */}
+              <div className="flex gap-4 flex-wrap">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`px-4 py-3 rounded-lg border-2 min-w-[300px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300 ${isDarkMode 
+                    ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                  }`}
+                />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className={`px-4 py-3 rounded-lg border-2 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300 ${isDarkMode 
+                    ? 'border-gray-600 bg-gray-800 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                  }`}
+                >
+                  <option value="name">Sort by Name</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="grade">Grade: Premium First</option>
+                </select>
+                <Button
+                  onClick={clearFilters}
+                  variant="outline"
+                  className="px-4 py-3"
+                >
+                  Clear All Filters
+                </Button>
+              </div>
+
+              {/* Filters Row */}
+              <div className="flex gap-4 flex-wrap">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className={`px-4 py-2 rounded-lg border-2 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300 ${isDarkMode 
+                    ? 'border-gray-600 bg-gray-800 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                  }`}
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(category => (
+                    <option key={category._id} value={category.name}>{category.name}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedGrade}
+                  onChange={(e) => setSelectedGrade(e.target.value)}
+                  className={`px-4 py-2 rounded-lg border-2 min-w-[140px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300 ${isDarkMode 
+                    ? 'border-gray-600 bg-gray-800 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                  }`}
+                >
+                  <option value="">All Grades</option>
+                  <option value="Premium">Premium</option>
+                  <option value="A">Grade A</option>
+                  <option value="B">Grade B</option>
+                  <option value="C">Grade C</option>
+                </select>
+
+                {/* Price Range */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min ₹"
+                    value={priceRange.min}
+                    onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+                    className={`px-3 py-2 rounded-lg border-2 w-24 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300 ${isDarkMode 
+                      ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' 
+                      : 'border-gray-300 bg-white text-gray-900'
+                    }`}
+                  />
+                  <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>to</span>
+                  <input
+                    type="number"
+                    placeholder="Max ₹"
+                    value={priceRange.max}
+                    onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+                    className={`px-3 py-2 rounded-lg border-2 w-24 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all duration-300 ${isDarkMode 
+                      ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' 
+                      : 'border-gray-300 bg-white text-gray-900'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Active Filters Display */}
+              {(searchTerm || selectedCategory || selectedGrade || priceRange.min || priceRange.max) && (
+                <div className="flex gap-2 flex-wrap pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Active filters:</span>
+                  {searchTerm && (
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded-full">
+                      Search: "{searchTerm}"
+                    </span>
+                  )}
+                  {selectedCategory && (
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full">
+                      Category: {selectedCategory}
+                    </span>
+                  )}
+                  {selectedGrade && (
+                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs rounded-full">
+                      Grade: {selectedGrade}
+                    </span>
+                  )}
+                  {(priceRange.min || priceRange.max) && (
+                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs rounded-full">
+                      Price: ₹{priceRange.min || '0'} - ₹{priceRange.max || '∞'}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </MagicCard>
 
           <div className="flex gap-2 flex-wrap">
             {categories.map(category => (
               <Button
-                key={category.id}
+                key={category._id || category.id || category.name}
                 variant={selectedCategory === category.name ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(selectedCategory === category.name ? '' : category.name)}
@@ -269,8 +482,16 @@ export default function Products() {
           </div>
         </div>
 
+        {/* Results Count */}
+        <div className="mb-4">
+          <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} 
+            {allProducts.length !== filteredProducts.length && ` out of ${allProducts.length} total`}
+          </p>
+        </div>
+
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-muted-foreground'}`}>
             <span className="text-5xl opacity-50">🔍</span>
             <p className="mt-4 text-lg">No products found</p>
             <p className="mt-2">Try adjusting your search or filters</p>
@@ -279,7 +500,10 @@ export default function Products() {
           <div className="grid grid-cols-auto-fill gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
             {filteredProducts.map((product) => (
               <MagicCard key={product._id} className="overflow-hidden" glowIntensity="medium">
-                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                <div className={`aspect-square overflow-hidden ${isDarkMode 
+                  ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
+                  : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                }`}>
                   <img 
                     src={product.images?.[0] || '/placeholder.svg'} 
                     alt={product.title} 
@@ -288,29 +512,62 @@ export default function Products() {
                 </div>
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
-                      {product.categoryId?.name}
-                    </span>
-                    <span className="text-xs text-green-600 font-medium">In Stock</span>
+                    <div className="flex gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm ${isDarkMode 
+                        ? 'bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300' 
+                        : 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800'
+                      }`}>
+                        {product.category?.name || product.categoryId?.name}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm ${
+                        product.agmarkGrade === 'Premium' 
+                          ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 dark:bg-yellow-900/30 dark:text-yellow-300' 
+                          : product.agmarkGrade === 'A'
+                          ? 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                          : product.agmarkGrade === 'B'
+                          ? 'bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                          : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                      }`}>
+                        Grade {product.agmarkGrade}
+                      </span>
+                    </div>
+                    <span className={`text-xs font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>In Stock</span>
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">{product.title}</h3>
-                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                  <h3 className={`font-semibold mb-2 text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{product.title}</h3>
+                  <p className={`text-sm mb-3 leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     {product.description || 'Fresh produce from local farmers'}
                   </p>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <span className="text-xl font-bold text-primary">₹{product.price}</span>
-                      <span className="text-sm text-muted-foreground">/{product.unit || 'kg'}</span>
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className={`text-xl font-bold ${isDarkMode ? 'text-green-400' : 'text-primary'}`}>₹{product.price}</span>
+                        <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-muted-foreground'}`}>/{product.unit || 'kg'}</span>
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => handleAddToCart(product._id)}
-                      size="sm"
-                      disabled={cartLoading === product._id || !user}
-                    >
-                      {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleAddToCart(product._id)}
+                        size="sm"
+                        disabled={cartLoading === product._id || !user}
+                        className="flex-1"
+                      >
+                        {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
+                      </Button>
+                      <Button
+                        onClick={() => handleChatWithFarmer(product)}
+                        size="sm"
+                        variant="outline"
+                        disabled={!user || user.role !== 'buyer'}
+                        className="flex-1"
+                      >
+                        💬 Chat
+                      </Button>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground border-t border-border pt-2">
+                  <div className={`text-xs pt-2 border-t ${isDarkMode 
+                    ? 'text-gray-400 border-gray-700' 
+                    : 'text-muted-foreground border-border'
+                  }`}>
                     by {product.sellerId?.email}
                   </div>
                 </div>

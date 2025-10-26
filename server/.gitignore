@@ -1,0 +1,55 @@
+# Server Environment - CRITICAL SECURITY FILES
+.env*
+!.env.example
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Upload directories
+uploads/
+temp/
+tmp/
+
+# SSL and certificates
+*.pem
+*.key
+*.crt
+*.cer
+
+# API Keys and secrets
+secrets/
+keys/
+config/secrets.js
+config/keys.js
+
+# Session files
+sessions/
+
+# Cache
+.cache/
+*.cache
+
+# Build artifacts
+dist/
+build/
+
+# Process files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Runtime data
+pids

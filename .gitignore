@@ -12,13 +12,57 @@ server/node_modules/
 client/build/
 client/dist/
 
-# Environment variables
+# Environment variables - CRITICAL SECURITY FILES
 .env
+.env.*
 .env.local
 .env.production
 .env.development
+.env.staging
+.env.test
 client/.env*
 server/.env*
+**/.env
+**/.env.*
+
+# API Keys and Secrets
+**/secrets/
+**/keys/
+**/*secret*
+**/*key*
+**/*token*
+**/config/secrets.js
+**/config/keys.js
+
+# Razorpay and Payment Gateway Files
+razorpay_*
+*razorpay*
+payment_keys*
+
+# Database connection strings
+database.json
+db_config.json
+mongodb.json
+
+# Authentication files
+auth_config.json
+jwt_secret*
+private_key*
+public_key*
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Cloud service credentials
+credentials.json
+service-account*.json
+aws-credentials*
+gcp-credentials*
 
 # Logs
 npm-debug.log*

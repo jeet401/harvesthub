@@ -38,9 +38,13 @@ export function CartProvider({ children }) {
   }
 
   // Add item to cart
-  const addToCart = async (productId, quantity = 1) => {
+  const addToCart = async (productId, quantity = 1, customPrice = undefined) => {
     try {
-      await api.addToCart({ productId, quantity })
+      const payload = { productId, quantity };
+      if (customPrice !== undefined) {
+        payload.customPrice = customPrice;
+      }
+      await api.addToCart(payload)
       await fetchCart() // Refresh cart data
       return true
     } catch (error) {

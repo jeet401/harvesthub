@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Environment variables - CLIENT SIDE
+.env*
+!.env.example
+
+# API Keys and sensitive config
+src/config/keys.js
+src/config/secrets.js
+public/config.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

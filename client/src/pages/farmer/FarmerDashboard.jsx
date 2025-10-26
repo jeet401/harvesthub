@@ -28,26 +28,16 @@ const FarmerDashboard = () => {
 
   const fetchFarmerData = async () => {
     try {
-      // Try to fetch from backend API first
-      const response = await fetch('http://localhost:5000/api/products?seller=current', {
-        method: 'GET',
-        credentials: 'include', // Include cookies for authentication
-      });
-
-      let products = [];
+      // Import the API function
+      const { api } = await import('../../lib/api.js');
       
-      if (response.ok) {
-        const data = await response.json();
-        products = data.products || [];
-        console.log('Fetched products from database:', products);
-      } else {
-        console.log('API failed, using fallback data');
-        // Fallback to mock products if API fails
-        products = [];
-      }
+      // Fetch only the current farmer's products
+      const data = await api.getMyProducts();
+      let products = data.products || [];
+      console.log('Fetched farmer products from database:', products);
 
-      // Also include localStorage products for demo purposes
-      const localProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
+      // Also include localStorage products for demo purposes (if any)
+      const localProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
       
       // Only show mock products if no real products exist and no local products (for first-time demo)
       const mockProducts = (products.length === 0 && localProducts.length === 0) ? [] : [];
@@ -68,8 +58,8 @@ const FarmerDashboard = () => {
     } catch (error) {
       console.error('Error fetching farmer data:', error);
       
-      // Fallback to localStorage only (no mock data for new farmers)
-      const localProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
+      // Fallback to user-specific localStorage only
+      const localProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
 
       const allProducts = [...localProducts];
       setCrops(allProducts);
@@ -97,18 +87,21 @@ const FarmerDashboard = () => {
     
     try {
       // Check if it's a localStorage product (user-added)
-      const userProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
+      const userProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
       const isUserProduct = userProducts.find(product => product._id === cropId);
       
       if (isUserProduct) {
         // Remove from localStorage
         const filteredProducts = userProducts.filter(product => product._id !== cropId);
-        localStorage.setItem('farmerProducts', JSON.stringify(filteredProducts));
+        localStorage.setItem(`farmerProducts_${user.id}`, JSON.stringify(filteredProducts));
         fetchFarmerData(); // Refresh the list
         alert('Product deleted successfully!');
       } else {
-        // For mock products, just show alert (they can't be actually deleted)
-        alert('Cannot delete default products. Only user-added products can be deleted.');
+        // Try to delete from backend (for database products)
+        const { api } = await import('../../lib/api.js');
+        // Note: You would need to implement a delete endpoint in the backend
+        console.log('Attempting to delete database product:', cropId);
+        alert('This feature requires backend implementation for database products.');
       }
 
       // Uncomment this when backend is ready:
@@ -139,14 +132,14 @@ const FarmerDashboard = () => {
   const handleSaveProduct = (updatedProduct) => {
     try {
       // Update in localStorage if it's a user-added product
-      const userProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
+      const userProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
       const isUserProduct = userProducts.find(product => product._id === updatedProduct._id);
       
       if (isUserProduct) {
         const updatedUserProducts = userProducts.map(product => 
           product._id === updatedProduct._id ? updatedProduct : product
         );
-        localStorage.setItem('farmerProducts', JSON.stringify(updatedUserProducts));
+        localStorage.setItem(`farmerProducts_${user.id}`, JSON.stringify(updatedUserProducts));
       }
       
       // Refresh the data
@@ -162,24 +155,42 @@ const FarmerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-background min-h-screen transition-colors duration-300">
         <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Loading...</div>
+          <div className="text-lg text-foreground">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+    <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900/20 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent mb-2">
             Welcome back, {user?.name || 'Farmer'}! ✨
           </h1>
-          <p className="text-gray-600">Manage your crop listings and track your sales with magical precision</p>
+          <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">Manage your crop listings and track your sales with magical precision</p>
         </div>
+
+        {/* Live Chat Section */}
+        <MagicCard glowIntensity="magical" className="bg-gradient-to-r from-blue-500 to-purple-600 mb-8">
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold mb-2 text-gray-100">💬 Connect with Buyers</h2>
+                <p className="text-blue-100">Chat with potential buyers, negotiate prices, and build relationships</p>
+              </div>
+              <button 
+                onClick={() => navigate('/chat')}
+                className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Live Chat ✨
+              </button>
+            </div>
+          </div>
+        </MagicCard>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -239,7 +250,7 @@ const FarmerDashboard = () => {
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">✨ Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <MagicCard 
               className="p-4" 
               onClick={() => navigate('/farmer/products/add')}
@@ -284,6 +295,38 @@ const FarmerDashboard = () => {
                 <div>
                   <p className="font-medium text-gray-900">Edit Profile</p>
                   <p className="text-sm text-gray-600">Update your farm details</p>
+                </div>
+              </div>
+            </MagicCard>
+
+            <MagicCard 
+              className="p-4" 
+              onClick={() => navigate('/farmer/analytics')}
+              glowIntensity="medium"
+            >
+              <div className="flex items-center">
+                <div className="p-3 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full mr-4 shadow-lg">
+                  <TrendingUp className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Analytics</p>
+                  <p className="text-sm text-gray-600">View sales insights & trends</p>
+                </div>
+              </div>
+            </MagicCard>
+
+            <MagicCard 
+              className="p-4" 
+              onClick={() => navigate('/chat')}
+              glowIntensity="medium"
+            >
+              <div className="flex items-center">
+                <div className="p-3 bg-gradient-to-br from-orange-100 to-red-100 rounded-full mr-4 shadow-lg">
+                  <span className="text-xl">💬</span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Live Chat</p>
+                  <p className="text-sm text-gray-600">Connect with buyers instantly</p>
                 </div>
               </div>
             </MagicCard>
@@ -431,6 +474,7 @@ const FarmerDashboard = () => {
             setSelectedProduct(null);
           }}
           onSave={handleSaveProduct}
+          userId={user.id}
         />
       </div>
     </MagicBento>

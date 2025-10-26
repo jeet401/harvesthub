@@ -14,6 +14,38 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// Create a separate route for farmer's own products
+router.get('/my-products', authRequired, async (req, res) => {
+  try {
+    const { category, search, limit = 20, page = 1 } = req.query;
+    const query = { sellerId: req.user.sub }; // Filter by current user's ID
+    
+    if (category) {
+      const categoryDoc = await Category.findOne({ name: category });
+      if (categoryDoc) query.categoryId = categoryDoc._id;
+    }
+    
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const products = await Product.find(query)
+      .populate('categoryId', 'name')
+      .populate('sellerId', 'email')
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    return res.json({ products });
+  } catch (error) {
+    console.error('My products fetch error:', error);
+    return res.status(500).json({ message: 'Failed to fetch your products' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const { category, search, limit = 20, page = 1, seller } = req.query;
@@ -31,12 +63,8 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    // Filter by seller for farmer dashboard
-    if (seller === 'current') {
-      // This would need authentication middleware to get current user
-      // For now, skip this filter to avoid 500 error
-      console.log('Seller filter requested but skipping for now');
-    } else if (seller) {
+    // Filter by specific seller ID (not current user)
+    if (seller) {
       query.sellerId = seller;
     }
     
@@ -130,7 +158,7 @@ router.put('/:id', authRequired, async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
     
-    if (product.sellerId.toString() !== req.user.id) {
+    if (product.sellerId.toString() !== req.user.sub) {
       return res.status(403).json({ message: 'Not authorized to update this product' });
     }
     
@@ -156,7 +184,7 @@ router.delete('/:id', authRequired, async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
     
-    if (product.sellerId.toString() !== req.user.id) {
+    if (product.sellerId.toString() !== req.user.sub) {
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
     
