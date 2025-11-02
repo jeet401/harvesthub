@@ -1,34 +1,127 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
-import { Users, Package, ShoppingCart, TrendingUp, Settings, UserCheck, AlertCircle } from 'lucide-react'
+import { Users, Package, ShoppingCart, TrendingUp, Settings, UserCheck, AlertCircle, RefreshCw, Award } from 'lucide-react'
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalProducts: 0,
     totalOrders: 0,
-    pendingVerifications: 0
+    pendingVerifications: 0,
+    pendingAGMARK: 0
   })
+  const [recentActivities, setRecentActivities] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
+    // Verify user is admin
+    if (user && user.role !== 'admin') {
+      navigate(`/${user.role}/dashboard`)
+      return
+    }
+    
     fetchDashboardData()
-  }, [])
+    fetchRecentActivity()
+  }, [user, navigate])
 
   const fetchDashboardData = async () => {
     try {
-      // Mock data for admin dashboard
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/analytics/stats`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          setError('Authentication failed. Please login as admin.')
+          throw new Error('Unauthorized')
+        }
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('Admin stats:', data)
+      
       setStats({
-        totalUsers: 1247,
-        totalProducts: 3892,
-        totalOrders: 567,
-        pendingVerifications: 23
+        totalUsers: data.users?.total || 0,
+        totalProducts: data.products?.total || 0,
+        totalOrders: data.orders?.total || 0,
+        pendingVerifications: data.products?.pending || 0,
+        pendingAGMARK: data.products?.pendingAGMARK || 0
       })
     } catch (error) {
       console.error('Admin dashboard fetch error:', error)
+      setError(error.message)
+      // Set zeros on error
+      setStats({
+        totalUsers: 0,
+        totalProducts: 0,
+        totalOrders: 0,
+        pendingVerifications: 0,
+        pendingAGMARK: 0
+      })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchRecentActivity = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/analytics/recent-activity?limit=10`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Recent activities:', data)
+        setRecentActivities(data.activities || [])
+      } else {
+        console.error('Failed to fetch recent activity:', response.status)
+      }
+    } catch (error) {
+      console.error('Failed to fetch recent activity:', error)
+    }
+  }
+
+  const handleRefresh = () => {
+    fetchDashboardData()
+    fetchRecentActivity()
+  }
+
+  const getTimeAgo = (timestamp) => {
+    const now = new Date()
+    const past = new Date(timestamp)
+    const diffInSeconds = Math.floor((now - past) / 1000)
+
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
+    return `${Math.floor(diffInSeconds / 86400)} days ago`
+  }
+
+  const getActivityIconColor = (color) => {
+    switch (color) {
+      case 'blue': return 'text-blue-600'
+      case 'green': return 'text-green-600'
+      case 'yellow': return 'text-yellow-600'
+      case 'purple': return 'text-purple-600'
+      default: return 'text-gray-600'
     }
   }
 
@@ -71,12 +164,21 @@ export default function AdminDashboard() {
       change: '+23%'
     },
     { 
-      title: 'Pending Verifications', 
+      title: 'Pending Products', 
       value: stats.pendingVerifications, 
       icon: AlertCircle, 
       color: 'text-orange-600', 
       bgColor: 'bg-orange-100',
       change: '-5%'
+    },
+    { 
+      title: 'AGMARK Verifications', 
+      value: stats.pendingAGMARK, 
+      icon: Award, 
+      color: 'text-yellow-600', 
+      bgColor: 'bg-yellow-100',
+      change: 'Pending',
+      link: '/admin/products?tab=agmark'
     },
   ]
 
@@ -91,17 +193,56 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Platform Overview & Management</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Platform Overview & Management {user?.email && `• Logged in as: ${user.email}`}
+          </p>
+        </div>
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
+          size="sm"
+          disabled={isLoading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-red-700">
+              <AlertCircle className="w-5 h-5" />
+              <div>
+                <p className="font-semibold">Error loading dashboard</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon
+          const CardWrapper = stat.link ? 'a' : 'div'
+          const cardProps = stat.link ? { 
+            href: stat.link, 
+            onClick: (e) => {
+              e.preventDefault()
+              navigate(stat.link)
+            },
+            className: 'cursor-pointer hover:shadow-lg transition-shadow'
+          } : {}
+          
           return (
-            <Card key={index}>
+            <Card key={index} {...cardProps}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-medium text-muted-foreground">{stat.title}</h3>
@@ -113,8 +254,10 @@ export default function AdminDashboard() {
                   <div className="text-2xl font-bold text-foreground">{stat.value.toLocaleString()}</div>
                   <div className={`text-xs px-2 py-1 rounded-full ${
                     stat.change.startsWith('+') 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-red-100 text-red-700'
+                      ? 'bg-green-100 text-green-700'
+                      : stat.change.startsWith('-')
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-yellow-100 text-yellow-700'
                   }`}>
                     {stat.change}
                   </div>
@@ -159,29 +302,32 @@ export default function AdminDashboard() {
           <CardTitle>Recent Platform Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30">
-              <Users className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="font-medium">New farmer registration</p>
-                <p className="text-sm text-muted-foreground">John Doe registered as a farmer - 2 minutes ago</p>
-              </div>
+          {recentActivities.length > 0 ? (
+            <div className="space-y-4">
+              {recentActivities.map((activity, index) => {
+                const IconComponent = activity.icon === 'Users' ? Users : 
+                                     activity.icon === 'Package' ? Package : 
+                                     ShoppingCart;
+                const iconColor = getActivityIconColor(activity.color);
+                
+                return (
+                  <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30">
+                    <IconComponent className={`w-5 h-5 ${iconColor}`} />
+                    <div className="flex-1">
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {activity.description} - {getTimeAgo(activity.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30">
-              <Package className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="font-medium">Product verification needed</p>
-                <p className="text-sm text-muted-foreground">Organic Tomatoes pending AGMARK verification - 15 minutes ago</p>
-              </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No recent activity
             </div>
-            <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30">
-              <ShoppingCart className="w-5 h-5 text-purple-600" />
-              <div>
-                <p className="font-medium">Large order placed</p>
-                <p className="text-sm text-muted-foreground">₹25,000 order for wheat seeds - 1 hour ago</p>
-              </div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Plus, Save, X, Upload, Image as ImageIcon } from 'lucide-react';
@@ -8,6 +9,7 @@ import MagicCard from '../../components/MagicCard';
 
 const AddProduct = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -17,12 +19,23 @@ const AddProduct = () => {
     categoryId: '',
     qualityGrade: 'A+',
     images: [],
-    imageUrls: [] // Support multiple images
+    imageUrls: [], // Support multiple images
+    // AGMARK Certificate fields
+    hasAgmarkCertificate: false,
+    agmarkCertificateUrl: '',
+    agmarkCertificateNumber: '',
+    agmarkGrade: 'A+',
+    // Additional fields
+    unit: 'kg',
+    location: '',
+    harvestDate: '',
+    expiryDate: ''
   });
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [imagePreviews, setImagePreviews] = useState([]); // Support multiple previews
   const [imagePreview, setImagePreview] = useState(null); // Keep for backward compatibility
+  const [certificatePreview, setCertificatePreview] = useState(null);
 
   useEffect(() => {
     fetchCategories();
@@ -30,7 +43,7 @@ const AddProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/products/categories');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/categories`);
       const data = await response.json();
       if (response.ok) {
         setCategories(data.categories || []);
@@ -119,6 +132,48 @@ const AddProduct = () => {
     }));
   };
 
+  const handleCertificateUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (limit to 2MB for certificates)
+      const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+      if (file.size > maxSize) {
+        alert('Certificate file is too large! Please select a file smaller than 2MB.');
+        e.target.value = '';
+        return;
+      }
+
+      // Check file type (PDF, JPEG, PNG)
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid certificate file (PDF, JPEG, or PNG).');
+        e.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const certificateUrl = event.target.result;
+        setCertificatePreview(file.name);
+        setFormData(prev => ({
+          ...prev,
+          agmarkCertificateUrl: certificateUrl
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeCertificate = () => {
+    setCertificatePreview(null);
+    setFormData(prev => ({
+      ...prev,
+      agmarkCertificateUrl: '',
+      agmarkCertificateNumber: '',
+      hasAgmarkCertificate: false
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -140,7 +195,16 @@ const AddProduct = () => {
         categoryId: formData.categoryId || null,
         images: formData.imageUrls && formData.imageUrls.length > 0 
           ? formData.imageUrls 
-          : (formData.imageUrl ? [formData.imageUrl] : [])
+          : (formData.imageUrl ? [formData.imageUrl] : []),
+        // AGMARK certificate data
+        agmarkCertificateUrl: formData.hasAgmarkCertificate ? formData.agmarkCertificateUrl : null,
+        agmarkCertificateNumber: formData.hasAgmarkCertificate ? formData.agmarkCertificateNumber : null,
+        agmarkGrade: formData.hasAgmarkCertificate ? formData.agmarkGrade : 'Not Graded',
+        // Additional fields
+        unit: formData.unit || 'kg',
+        location: formData.location || '',
+        harvestDate: formData.harvestDate || null,
+        expiryDate: formData.expiryDate || null
       };
 
       console.log('Submitting product data:', productData);
@@ -155,7 +219,7 @@ const AddProduct = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/products', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -190,7 +254,10 @@ const AddProduct = () => {
       console.log('Server response:', responseData);
 
       if (response.ok) {
-        alert('Product added successfully to database!');
+        const successMessage = formData.hasAgmarkCertificate
+          ? 'Product added successfully! Your AGMARK certificate will be verified by admin.'
+          : 'Product added successfully to database!';
+        alert(successMessage);
         
         // Reset form
         setFormData({
@@ -201,14 +268,38 @@ const AddProduct = () => {
           categoryId: '',
           qualityGrade: 'A+',
           images: [],
-          imageUrls: []
+          imageUrls: [],
+          hasAgmarkCertificate: false,
+          agmarkCertificateUrl: '',
+          agmarkCertificateNumber: '',
+          agmarkGrade: 'A+',
+          unit: 'kg',
+          location: '',
+          harvestDate: '',
+          expiryDate: ''
         });
         setImagePreviews([]);
         setImagePreview(null);
+        setCertificatePreview(null);
         setShowForm(false);
+        
+        // Navigate back to dashboard immediately to see the new product
+        navigate('/farmer/dashboard');
       } else {
         console.error('API Error:', responseData);
-        alert(`Error: ${responseData.message || 'Failed to add product'}`);
+        console.error('Response status:', response.status);
+        console.error('Response statusText:', response.statusText);
+        
+        // Show detailed error message
+        const errorMessage = responseData.message || 'Failed to add product';
+        alert(`Error: ${errorMessage}\nStatus: ${response.status}`);
+        
+        // If authentication error, suggest re-login
+        if (response.status === 401) {
+          alert('Authentication failed. Please log in again.');
+          window.location.href = '/auth/login';
+          return;
+        }
         
         // If API fails, fallback to localStorage for demo purposes
         console.log('API failed, falling back to localStorage');
@@ -253,11 +344,8 @@ const AddProduct = () => {
         agmarkCertified: Math.random() > 0.5
       };
 
-      const existingProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
-      const updatedProducts = [...existingProducts, newProduct];
-      localStorage.setItem(`farmerProducts_${user.id}`, JSON.stringify(updatedProducts));
-
-      alert('Product saved locally for demo!');
+      // Product is now saved in database via API call above
+      // No localStorage needed - all data comes from backend
       
       // Reset form
       setFormData({
@@ -458,6 +546,125 @@ const AddProduct = () => {
                   >
                     <X className="h-4 w-4" />
                   </button>
+                </div>
+              )}
+            </div>
+
+            {/* AGMARK Certificate Section */}
+            <div className="border-t pt-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="hasAgmark"
+                  checked={formData.hasAgmarkCertificate}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    hasAgmarkCertificate: e.target.checked
+                  }))}
+                  className="w-4 h-4 text-green-600 bg-white border-gray-300 rounded focus:ring-green-500"
+                />
+                <label htmlFor="hasAgmark" className="text-sm font-medium text-gray-700">
+                  I have AGMARK Certificate (Optional but Recommended)
+                </label>
+              </div>
+
+              {formData.hasAgmarkCertificate && (
+                <div className="space-y-4 pl-6 border-l-2 border-green-200">
+                  <p className="text-sm text-green-600 mb-4">
+                    ✓ AGMARK certified products get higher visibility and trust from buyers!
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Certificate Number *
+                      </label>
+                      <input
+                        type="text"
+                        name="agmarkCertificateNumber"
+                        required={formData.hasAgmarkCertificate}
+                        value={formData.agmarkCertificateNumber}
+                        onChange={handleInputChange}
+                        placeholder="e.g., AG-MH-2024-12345"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        AGMARK Grade *
+                      </label>
+                      <select
+                        name="agmarkGrade"
+                        required={formData.hasAgmarkCertificate}
+                        value={formData.agmarkGrade}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      >
+                        <option value="A+">A+ (Premium)</option>
+                        <option value="A">A (Excellent)</option>
+                        <option value="B">B (Good)</option>
+                        <option value="C">C (Standard)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Upload Certificate (PDF/Image) *
+                    </label>
+                    
+                    {!certificatePreview ? (
+                      <div className="border-2 border-dashed border-green-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors bg-green-50">
+                        <input
+                          type="file"
+                          accept=".pdf,image/jpeg,image/png"
+                          onChange={handleCertificateUpload}
+                          required={formData.hasAgmarkCertificate}
+                          className="hidden"
+                          id="certificate-upload"
+                        />
+                        <label htmlFor="certificate-upload" className="cursor-pointer">
+                          <div className="flex flex-col items-center">
+                            <Upload className="h-10 w-10 text-green-500 mb-3" />
+                            <p className="text-sm text-gray-700 mb-1">
+                              Click to upload AGMARK certificate
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              PDF, JPEG, PNG up to 2MB
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="relative bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="bg-green-100 p-2 rounded">
+                              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{certificatePreview}</p>
+                              <p className="text-xs text-green-600">Certificate uploaded ✓</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removeCertificate}
+                            className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-gray-500 mt-2">
+                      Note: Certificate will be verified by admin. Product will be marked as "Pending Verification" until approved.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

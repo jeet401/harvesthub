@@ -13,6 +13,9 @@ function signRefreshToken(payload) {
 
 function setAuthCookies(res, tokens) {
   const isProd = process.env.NODE_ENV === 'production';
+  
+  // Create unique cookie names to allow multiple sessions in different tabs
+  // Note: This won't work in same tab, but will help with browser testing
   res.cookie('access_token', tokens.accessToken, {
     httpOnly: true,
     sameSite: 'lax',

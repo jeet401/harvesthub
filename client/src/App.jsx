@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx'
 import { CartProvider } from './contexts/CartContext.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import Navbar from './components/Navbar.jsx'
+import AuthSync from './components/AuthSync.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/auth/Login.jsx'
 import SignUp from './pages/auth/SignUp.jsx'
@@ -17,6 +18,12 @@ import Checkout from './pages/buyer/Checkout.jsx'
 import OrderSuccess from './pages/buyer/OrderSuccess.jsx'
 import Orders from './pages/buyer/Orders.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
+import UserManagement from './pages/admin/UserManagement.jsx'
+import ProductManagement from './pages/admin/ProductManagement.jsx'
+import OrderManagement from './pages/admin/OrderManagement.jsx'
+import AdminAnalytics from './pages/admin/AdminAnalytics.jsx'
+import Verifications from './pages/admin/Verifications.jsx'
+import Settings from './pages/admin/Settings.jsx'
 import FarmerDashboard from './pages/farmer/FarmerDashboard.jsx'
 import SimpleFarmerDashboard from './pages/farmer/SimpleFarmerDashboard.jsx'
 import ProductDetail from './pages/farmer/ProductDetail.jsx'
@@ -25,7 +32,6 @@ import AddProduct from './pages/farmer/AddProduct.jsx'
 import FarmerSignUpSuccess from './pages/auth/FarmerSignUpSuccess.jsx'
 import FarmerAnalytics from './pages/farmer/Analytics.jsx'
 import BuyerAnalytics from './pages/buyer/Analytics.jsx'
-import TestPage from './pages/TestPage.jsx'
 import Chat from './pages/Chat.jsx'
 
 
@@ -45,6 +51,7 @@ export default function App() {
           <CartProvider>
             <div className="min-h-screen bg-background transition-colors duration-300">
               <Navbar />
+              <AuthSync />
               <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth/login" element={<Login />} />
@@ -67,13 +74,13 @@ export default function App() {
             <Route path="/farmer/analytics" element={<FarmerAnalytics />} />
             <Route path="/buyer/analytics" element={<BuyerAnalytics />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/test" element={<TestPage />} />
-            <Route path="/farmer/test" element={<TestFarmerPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<Placeholder title="User Management" />} />
-            <Route path="/admin/products" element={<Placeholder title="Product Management" />} />
-            <Route path="/admin/orders" element={<Placeholder title="Order Management" />} />
-            <Route path="/admin/analytics" element={<Placeholder title="Analytics" />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/products" element={<ProductManagement />} />
+            <Route path="/admin/orders" element={<OrderManagement />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/verifications" element={<Verifications />} />
+            <Route path="/admin/settings" element={<Settings />} />
           </Routes>
             </div>
           </CartProvider>

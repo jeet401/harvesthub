@@ -10,6 +10,31 @@ export function AuthProvider({ children }) {
   // Check for existing authentication on app load
   useEffect(() => {
     checkAuth();
+    
+    // Listen for storage events (cross-tab communication)
+    const handleStorageChange = (e) => {
+      // If auth-related storage changed, re-check auth
+      if (e.key === 'auth_changed' || e.key === 'logout_event') {
+        console.log('Auth changed in another tab, re-checking...');
+        checkAuth();
+      }
+    };
+    
+    // Listen for window focus (when user switches back to this tab)
+    const handleFocus = () => {
+      console.log('Tab focused, re-checking auth...');
+      checkAuth();
+    };
+    
+    // Add event listeners
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Check auth function - try to get user from server only
@@ -21,7 +46,6 @@ export function AuthProvider({ children }) {
       const response = await api.refresh();
       if (response && response.user) {
         setUser(response.user);
-        console.log('Auth restored from server:', response.user);
       }
     } catch (error) {
       console.log('No valid auth token found');
@@ -36,9 +60,10 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     try {
       const response = await api.login(credentials)
-      console.log('Login response:', response)
       if (response && response.user) {
         setUser(response.user)
+        // Notify other tabs about auth change
+        localStorage.setItem('auth_changed', Date.now().toString());
         return response
       } else {
         throw new Error('Invalid login response')
@@ -69,11 +94,15 @@ export function AuthProvider({ children }) {
       await api.logout()
       setUser(null)
       localStorage.removeItem('demoUser')
+      // Notify other tabs about logout
+      localStorage.setItem('logout_event', Date.now().toString());
     } catch (error) {
       console.error('Logout error:', error)
       // Clear user state anyway
       setUser(null)
       localStorage.removeItem('demoUser')
+      // Notify other tabs about logout even on error
+      localStorage.setItem('logout_event', Date.now().toString());
     }
   }
 

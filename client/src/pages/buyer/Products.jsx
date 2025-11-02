@@ -44,7 +44,7 @@ export default function Products() {
       // Try to fetch products from backend API first
       let apiProducts = [];
       try {
-        const response = await fetch('http://localhost:5000/api/products', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products`, {
           method: 'GET',
           credentials: 'include',
         });
@@ -53,6 +53,9 @@ export default function Products() {
           const data = await response.json();
           apiProducts = data.products || [];
           console.log('Fetched products from database:', apiProducts);
+          
+          // Filter to only show active products (extra safeguard)
+          apiProducts = apiProducts.filter(product => product.status === 'active');
           
           // Transform backend data to match frontend expectations
           apiProducts = apiProducts.map(product => ({
@@ -80,15 +83,7 @@ export default function Products() {
         console.log('API not available, using fallback data');
       }
 
-      // Get farmer-added products from localStorage
-      const farmerProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
-      const localStorageProducts = farmerProducts.map(product => ({
-        ...product,
-        category: { name: product.categoryName || 'Other' },
-        seller: { name: 'Local Farmer', location: product.location || 'Punjab, India' },
-        rating: product.rating || 4.5,
-        reviewsCount: product.reviewsCount || Math.floor(Math.random() * 20) + 1
-      }));
+      // All products now come from database - no localStorage needed
       
       // Mock products for demo (only if no real products)
       const mockProducts = apiProducts.length > 0 ? [] : [
@@ -124,10 +119,9 @@ export default function Products() {
         }
       ];
 
-      // Combine all products: API + localStorage + mock (if needed)
+      // Combine all products: API + mock (if needed, for demo)
       const combinedProducts = [
         ...apiProducts,
-        ...localStorageProducts,
         ...mockProducts
       ];
 
@@ -151,7 +145,7 @@ export default function Products() {
       // Try to fetch categories from backend API first
       let apiCategories = [];
       try {
-        const response = await fetch('http://localhost:5000/api/products/categories', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/categories`, {
           method: 'GET',
           credentials: 'include',
         });
@@ -287,7 +281,7 @@ export default function Products() {
 
     try {
       // Create or find conversation with this farmer for this product
-      const response = await fetch('http://localhost:5000/api/chat/conversations', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chat/conversations`, {
         method: 'POST',
         credentials: 'include',
         headers: {

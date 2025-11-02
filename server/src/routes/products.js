@@ -49,7 +49,9 @@ router.get('/my-products', authRequired, async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { category, search, limit = 20, page = 1, seller } = req.query;
-    const query = {};
+    
+    // Only show active products to buyers (not pending or rejected)
+    const query = { status: 'active' };
     
     if (category) {
       const categoryDoc = await Category.findOne({ name: category });
@@ -91,7 +93,13 @@ router.post('/', authRequired, async (req, res) => {
     console.log('Creating product with user:', req.user);
     console.log('Request body:', req.body);
     
-    const { title, description, price, stock, categoryId, images } = req.body;
+    const { 
+      title, description, price, stock, categoryId, images,
+      // AGMARK fields
+      agmarkCertificateUrl, agmarkCertificateNumber, agmarkGrade,
+      // Additional fields
+      unit, location, harvestDate, expiryDate
+    } = req.body;
     
     // Validate required fields
     if (!title || !price || !stock) {
@@ -106,15 +114,30 @@ router.post('/', authRequired, async (req, res) => {
       }
     }
     
-    const product = new Product({
+    const productData = {
       sellerId: req.user.sub, // Use sub from JWT payload
       title,
       description,
       price,
       stock,
       categoryId: categoryId || null, // Allow null category
-      images
-    });
+      images,
+      unit: unit || 'kg',
+      location,
+      harvestDate,
+      expiryDate
+    };
+
+    // If AGMARK certificate provided, set verification status to pending
+    if (agmarkCertificateUrl) {
+      productData.agmarkCertificateUrl = agmarkCertificateUrl;
+      productData.agmarkCertificateNumber = agmarkCertificateNumber;
+      productData.agmarkGrade = agmarkGrade || 'Not Graded';
+      productData.agmarkVerificationStatus = 'pending';
+      productData.agmarkCertified = false; // Admin needs to verify first
+    }
+
+    const product = new Product(productData);
 
     await product.save();
     
@@ -140,6 +163,28 @@ router.get('/:id', async (req, res) => {
     
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    // If product is not active, only allow the seller or admin to view it
+    // For buyers, they should only see active products
+    if (product.status !== 'active') {
+      // Check if user is authenticated and is the owner
+      const token = req.cookies.token;
+      if (token) {
+        try {
+          const jwt = require('jsonwebtoken');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          // Allow if user is the seller or an admin
+          if (decoded.sub !== product.sellerId._id.toString() && decoded.role !== 'admin') {
+            return res.status(404).json({ message: 'Product not found' });
+          }
+        } catch (err) {
+          return res.status(404).json({ message: 'Product not found' });
+        }
+      } else {
+        // No token, user is not authenticated, don't show non-active products
+        return res.status(404).json({ message: 'Product not found' });
+      }
     }
     
     return res.json({ product });

@@ -76,7 +76,7 @@ const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
 
     // Try to save to backend database first
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${product._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -110,24 +110,11 @@ const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
       }
     } catch (error) {
       console.error('Error updating product in database:', error);
-      console.log('Using localStorage fallback');
+      alert('Failed to update product');
+      return;
     }
 
-    // Fallback: Save to localStorage (for user-added products or when API fails)
-    try {
-      const userProducts = JSON.parse(localStorage.getItem(`farmerProducts_${userId}`) || '[]');
-      const isUserProduct = userProducts.find(p => p._id === product._id);
-      
-      if (isUserProduct) {
-        const updatedUserProducts = userProducts.map(p => 
-          p._id === product._id ? updatedProduct : p
-        );
-        localStorage.setItem(`farmerProducts_${userId}`, JSON.stringify(updatedUserProducts));
-      }
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
-    }
-
+    // Product successfully updated in database
     onSave(updatedProduct);
   };
 

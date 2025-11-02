@@ -3,10 +3,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Plus, Edit, Trash2, Eye, Package, DollarSign, Star, TrendingUp } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Package, DollarSign, Star, TrendingUp, RefreshCw } from 'lucide-react';
 import EditProductModal from '../../components/EditProductModal';
 import MagicBento from '../../components/MagicBento';
 import MagicCard from '../../components/MagicCard';
+import NotificationBell from '../../components/NotificationBell';
 
 const FarmerDashboard = () => {
   const { user } = useAuth();
@@ -22,48 +23,51 @@ const FarmerDashboard = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  // Fetch data on mount and when user changes
   useEffect(() => {
-    fetchFarmerData();
+    if (user) {
+      fetchFarmerData();
+    }
+  }, [user]);
+
+  // Also fetch when the component receives focus (after navigation)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Window gained focus, refreshing farmer data...');
+      fetchFarmerData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const fetchFarmerData = async () => {
     try {
+      console.log('Fetching farmer data...');
       // Import the API function
       const { api } = await import('../../lib/api.js');
       
-      // Fetch only the current farmer's products
+      // Fetch only the current farmer's products from database (real-time data only)
       const data = await api.getMyProducts();
       let products = data.products || [];
       console.log('Fetched farmer products from database:', products);
 
-      // Also include localStorage products for demo purposes (if any)
-      const localProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
-      
-      // Only show mock products if no real products exist and no local products (for first-time demo)
-      const mockProducts = (products.length === 0 && localProducts.length === 0) ? [] : [];
-
-      // Combine all products: database + localStorage (no mock products for new farmers)
-      const allProducts = [
-        ...products.map(p => ({
-          ...p,
-          name: p.title,
-          quantity: p.stock,
-          categoryName: p.categoryId?.name || 'Unknown',
-        })),
-        ...localProducts
-      ];
+      // Map products to match component structure
+      const allProducts = products.map(p => ({
+        ...p,
+        name: p.title,
+        quantity: p.stock,
+        categoryName: p.categoryId?.name || 'Unknown',
+      }));
       
       setCrops(allProducts);
       calculateStats(allProducts);
     } catch (error) {
       console.error('Error fetching farmer data:', error);
-      
-      // Fallback to user-specific localStorage only
-      const localProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
-
-      const allProducts = [...localProducts];
-      setCrops(allProducts);
-      calculateStats(allProducts);
+      setCrops([]);
+      calculateStats([]);
     } finally {
       setLoading(false);
     }
@@ -86,36 +90,27 @@ const FarmerDashboard = () => {
     if (!confirm('Are you sure you want to delete this crop?')) return;
     
     try {
-      // Check if it's a localStorage product (user-added)
-      const userProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
-      const isUserProduct = userProducts.find(product => product._id === cropId);
+      // Delete from backend database
+      const { api } = await import('../../lib/api.js');
+      console.log('Deleting database product:', cropId);
       
-      if (isUserProduct) {
-        // Remove from localStorage
-        const filteredProducts = userProducts.filter(product => product._id !== cropId);
-        localStorage.setItem(`farmerProducts_${user.id}`, JSON.stringify(filteredProducts));
-        fetchFarmerData(); // Refresh the list
-        alert('Product deleted successfully!');
-      } else {
-        // Try to delete from backend (for database products)
-        const { api } = await import('../../lib/api.js');
-        // Note: You would need to implement a delete endpoint in the backend
-        console.log('Attempting to delete database product:', cropId);
-        alert('This feature requires backend implementation for database products.');
-      }
-
-      // Uncomment this when backend is ready:
+      // TODO: Implement delete endpoint in backend
+      // await api.deleteProduct(cropId);
+      
+      alert('Delete functionality will be implemented soon. For now, please contact admin.');
+      
+      // Uncomment when backend DELETE endpoint is ready:
       /*
-      const response = await fetch(`/api/products/${cropId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${cropId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        credentials: 'include'
       });
       
       if (response.ok) {
         fetchFarmerData();
         alert('Product deleted successfully!');
+      } else {
+        alert('Failed to delete product');
       }
       */
     } catch (error) {
@@ -131,16 +126,8 @@ const FarmerDashboard = () => {
 
   const handleSaveProduct = (updatedProduct) => {
     try {
-      // Update in localStorage if it's a user-added product
-      const userProducts = JSON.parse(localStorage.getItem(`farmerProducts_${user.id}`) || '[]');
-      const isUserProduct = userProducts.find(product => product._id === updatedProduct._id);
-      
-      if (isUserProduct) {
-        const updatedUserProducts = userProducts.map(product => 
-          product._id === updatedProduct._id ? updatedProduct : product
-        );
-        localStorage.setItem(`farmerProducts_${user.id}`, JSON.stringify(updatedUserProducts));
-      }
+      // TODO: Update product in database via API
+      console.log('Updating product:', updatedProduct);
       
       // Refresh the data
       fetchFarmerData();
@@ -168,10 +155,15 @@ const FarmerDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent mb-2">
-            Welcome back, {user?.name || 'Farmer'}! ✨
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">Manage your crop listings and track your sales with magical precision</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent mb-2">
+                Welcome back, {user?.name || 'Farmer'}! ✨
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">Manage your crop listings and track your sales with magical precision</p>
+            </div>
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Live Chat Section */}
@@ -343,6 +335,15 @@ const FarmerDashboard = () => {
             <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
+                className="border-purple-600 text-purple-600 hover:bg-purple-50 shadow-lg hover:shadow-xl transition-all duration-300" 
+                onClick={fetchFarmerData}
+                title="Refresh products"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button 
+                variant="outline" 
                 className="border-green-600 text-green-600 hover:bg-green-50 shadow-lg hover:shadow-xl transition-all duration-300" 
                 onClick={() => navigate('/farmer/orders')}
               >
@@ -380,8 +381,8 @@ const FarmerDashboard = () => {
                     <th className="text-left pb-3 font-medium text-gray-700">Crop</th>
                     <th className="text-left pb-3 font-medium text-gray-700">Quantity</th>
                     <th className="text-left pb-3 font-medium text-gray-700">Price</th>
-                    <th className="text-left pb-3 font-medium text-gray-700">Grade</th>
-                    <th className="text-left pb-3 font-medium text-gray-700">Harvest Date</th>
+                    <th className="text-left pb-3 font-medium text-gray-700">Status</th>
+                    <th className="text-left pb-3 font-medium text-gray-700">AGMARK</th>
                     <th className="text-left pb-3 font-medium text-gray-700">Actions</th>
                   </tr>
                 </thead>
@@ -402,32 +403,49 @@ const FarmerDashboard = () => {
                         </div>
                       </td>
                       <td className="py-4">
-                        <span className="text-gray-900 font-medium">{crop.stock} kg</span>
+                        <span className="text-gray-900 font-medium">{crop.stock} {crop.unit || 'kg'}</span>
                       </td>
                       <td className="py-4">
-                        <span className="text-gray-900 font-medium">₹{crop.price}/kg</span>
+                        <span className="text-gray-900 font-medium">₹{crop.price}/{crop.unit || 'kg'}</span>
                       </td>
                       <td className="py-4">
-                        <div className="flex items-center space-x-1">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm">
-                            A+
-                          </span>
-                          <div className="flex space-x-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star key={star} className="h-3 w-3 text-yellow-400 fill-current" />
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-500">(5/5)</span>
-                        </div>
-                      </td>
-                      <td className="py-4">
-                        <span className="text-gray-900">
-                          {new Date().toLocaleDateString('en-IN', { 
-                            day: 'numeric', 
-                            month: 'numeric', 
-                            year: 'numeric' 
-                          })}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          crop.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : crop.status === 'rejected' 
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {crop.status === 'active' ? '✓ Active' : crop.status === 'rejected' ? '✗ Rejected' : '⏳ Pending'}
                         </span>
+                      </td>
+                      <td className="py-4">
+                        {crop.agmarkCertified ? (
+                          <div className="flex items-center space-x-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm">
+                              ✓ {crop.agmarkGrade}
+                            </span>
+                          </div>
+                        ) : crop.agmarkVerificationStatus === 'pending' ? (
+                          <span className="text-xs text-yellow-600 flex items-center gap-1">
+                            ⏳ Pending Verification
+                          </span>
+                        ) : crop.agmarkVerificationStatus === 'rejected' ? (
+                          <div>
+                            <span className="text-xs text-red-600 flex items-center gap-1">
+                              ✗ Rejected
+                            </span>
+                            {crop.agmarkRejectionReason && (
+                              <p className="text-xs text-red-500 mt-1 max-w-xs" title={crop.agmarkRejectionReason}>
+                                {crop.agmarkRejectionReason.length > 50 
+                                  ? crop.agmarkRejectionReason.substring(0, 50) + '...' 
+                                  : crop.agmarkRejectionReason}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-500">-</span>
+                        )}
                       </td>
                       <td className="py-4">
                         <div className="flex items-center space-x-2">

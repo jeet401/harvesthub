@@ -23,7 +23,7 @@ const ProductDetail = () => {
   const fetchProductDetails = async () => {
     try {
       // Try to fetch product from backend API first
-      const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${id}`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -53,28 +53,10 @@ const ProductDetail = () => {
           };
         }
       } else {
-        console.log('Product not found in database, checking localStorage');
+        console.log('Product not found in database');
       }
 
-      // If not found in database, check localStorage (user-added products)
-      if (!foundProduct) {
-        const userProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
-        const userProduct = userProducts.find(product => product._id === id);
-        
-        if (userProduct) {
-          foundProduct = {
-            ...userProduct,
-            name: userProduct.title || userProduct.name,
-            harvestDate: userProduct.harvestDate || new Date().toLocaleDateString(),
-            images: userProduct.images && userProduct.images.length > 0 
-              ? userProduct.images 
-              : [userProduct.imageUrl || '/placeholder.jpg'],
-            agmarkCertified: userProduct.agmarkCertified ?? true,
-            rating: userProduct.rating || 5,
-            reviewsCount: userProduct.reviewsCount || Math.floor(Math.random() * 50) + 10
-          };
-        }
-      }
+      // All products should be in database now - no localStorage fallback needed
 
       // If still not found, check mock products for demo
       if (!foundProduct) {
@@ -171,23 +153,27 @@ const ProductDetail = () => {
     setEditModalOpen(true);
   };
 
-  const handleSaveProduct = (updatedProduct) => {
+  const handleSaveProduct = async (updatedProduct) => {
     try {
-      // Update in localStorage if it's a user-added product
-      const userProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
-      const isUserProduct = userProducts.find(p => p._id === updatedProduct._id);
+      // Update product via API
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${updatedProduct._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProduct)
+      });
       
-      if (isUserProduct) {
-        const updatedUserProducts = userProducts.map(p => 
-          p._id === updatedProduct._id ? updatedProduct : p
-        );
-        localStorage.setItem('farmerProducts', JSON.stringify(updatedUserProducts));
-        
-        // Update current product state
-        setProduct(updatedProduct);
+      if (response.ok) {
+        const data = await response.json();
+        setProduct({
+          ...data.product,
+          name: data.product.title,
+          quantity: data.product.stock,
+          categoryName: data.product.categoryId?.name || 'Unknown'
+        });
         alert('Product updated successfully!');
       } else {
-        alert('Cannot edit default products. Only user-added products can be edited.');
+        alert('Failed to update product');
       }
       
       setEditModalOpen(false);
@@ -197,20 +183,21 @@ const ProductDetail = () => {
     }
   };
 
-  const handleRemoveProduct = () => {
+  const handleRemoveProduct = async () => {
     if (!confirm('Are you sure you want to remove this product?')) return;
     
     try {
-      const userProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
-      const isUserProduct = userProducts.find(p => p._id === product._id);
+      // Delete product via API
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${product._id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
       
-      if (isUserProduct) {
-        const filteredProducts = userProducts.filter(p => p._id !== product._id);
-        localStorage.setItem('farmerProducts', JSON.stringify(filteredProducts));
+      if (response.ok) {
         alert('Product removed successfully!');
         navigate('/farmer/dashboard');
       } else {
-        alert('Cannot remove default products. Only user-added products can be removed.');
+        alert('Failed to remove product');
       }
     } catch (error) {
       console.error('Error removing product:', error);
@@ -218,24 +205,22 @@ const ProductDetail = () => {
     }
   };
 
-  const handleUpdateStock = () => {
+  const handleUpdateStock = async () => {
     try {
-      const userProducts = JSON.parse(localStorage.getItem('farmerProducts') || '[]');
-      const isUserProduct = userProducts.find(p => p._id === product._id);
+      // Update stock via API
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${product._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock: quantity })
+      });
       
-      if (isUserProduct) {
-        const updatedUserProducts = userProducts.map(p => 
-          p._id === product._id 
-            ? { ...p, stock: quantity, quantity: quantity }
-            : p
-        );
-        localStorage.setItem('farmerProducts', JSON.stringify(updatedUserProducts));
-        
+      if (response.ok) {
         // Update current product state
         setProduct(prev => ({ ...prev, stock: quantity, quantity: quantity }));
         alert('Stock updated successfully!');
       } else {
-        alert('Cannot update stock for default products. Only user-added products can be updated.');
+        alert('Failed to update stock');
       }
     } catch (error) {
       console.error('Error updating stock:', error);

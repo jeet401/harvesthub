@@ -2,12 +2,50 @@ import { Button } from '../components/ui/button.jsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card.jsx';
 import { ImageWithFallback } from '../components/ImageWithFallback.jsx';
 import { ArrowRight, Leaf, Users, TrendingUp, Shield, Star, User, Tractor } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useEffect } from 'react';
 import MagicBento from '../components/MagicBento.jsx';
 import MagicCard from '../components/MagicCard.jsx';
 import BlurText from '../components/ui/blur-text.jsx';
 
 export default function Home() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect authenticated users to their respective dashboards
+  useEffect(() => {
+    if (!loading && user) {
+      switch (user.role) {
+        case 'admin':
+          navigate('/admin/dashboard', { replace: true });
+          break;
+        case 'farmer':
+          navigate('/farmer/dashboard', { replace: true });
+          break;
+        case 'buyer':
+          navigate('/buyer/dashboard', { replace: true });
+          break;
+        default:
+          // Do nothing for unknown roles
+          break;
+      }
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only show landing page for non-authenticated users
   const features = [
     {
       icon: Users,

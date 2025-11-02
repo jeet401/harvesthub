@@ -47,11 +47,13 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/payment', require('./routes/payment'));
 app.use('/api/chat', require('./routes/chat')); // Chat routes
 app.use('/api/analytics', require('./routes/analytics')); // Analytics routes
+app.use('/api/admin', require('./routes/admin')); // Admin routes
+app.use('/api', require('./routes/notifications')); // Notification routes
 
 // Socket.io connection handling
 require('./lib/socket')(io);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 connectToDatabase()
   .then(() => {
