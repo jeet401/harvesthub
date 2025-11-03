@@ -53,6 +53,21 @@ router.get('/', async (req, res) => {
     // Only show active products to buyers (not pending or rejected)
     const query = { status: 'active' };
     
+    console.log('=== Products GET Request ===');
+    console.log('Query params:', { category, search, limit, page, seller });
+    
+    // First, let's check total products in database
+    const totalProducts = await Product.countDocuments({});
+    const activeProducts = await Product.countDocuments({ status: 'active' });
+    const pendingProducts = await Product.countDocuments({ status: 'pending' });
+    const rejectedProducts = await Product.countDocuments({ status: 'rejected' });
+    
+    console.log('Database stats:');
+    console.log(`  Total products: ${totalProducts}`);
+    console.log(`  Active: ${activeProducts}`);
+    console.log(`  Pending: ${pendingProducts}`);
+    console.log(`  Rejected: ${rejectedProducts}`);
+    
     if (category) {
       const categoryDoc = await Category.findOne({ name: category });
       if (categoryDoc) query.categoryId = categoryDoc._id;
@@ -70,12 +85,17 @@ router.get('/', async (req, res) => {
       query.sellerId = seller;
     }
     
+    console.log('Final query:', JSON.stringify(query));
+    
     const products = await Product.find(query)
       .populate('categoryId', 'name')
       .populate('sellerId', 'email')
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit))
       .sort({ createdAt: -1 });
+    
+    console.log(`Returning ${products.length} products`);
+    console.log('=== End Products Request ===\n');
     
     return res.json({ products });
   } catch (error) {
@@ -125,21 +145,25 @@ router.post('/', authRequired, async (req, res) => {
       unit: unit || 'kg',
       location,
       harvestDate,
-      expiryDate
+      expiryDate,
+      status: 'active' // Default to active so buyers can see products immediately
     };
 
-    // If AGMARK certificate provided, set verification status to pending
+    // If AGMARK certificate provided, set verification status to pending but keep product active
     if (agmarkCertificateUrl) {
       productData.agmarkCertificateUrl = agmarkCertificateUrl;
       productData.agmarkCertificateNumber = agmarkCertificateNumber;
       productData.agmarkGrade = agmarkGrade || 'Not Graded';
       productData.agmarkVerificationStatus = 'pending';
       productData.agmarkCertified = false; // Admin needs to verify first
+      // Product stays active, but AGMARK certification is pending
     }
 
     const product = new Product(productData);
 
     await product.save();
+    
+    console.log('Product created successfully with status:', product.status);
     
     const populatedProduct = await Product.findById(product._id)
       .populate('categoryId', 'name')
@@ -157,36 +181,54 @@ router.post('/', authRequired, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    console.log('=== Fetching product by ID ===');
+    console.log('Product ID:', req.params.id);
+    
     const product = await Product.findById(req.params.id)
       .populate('categoryId', 'name')
       .populate('sellerId', 'email');
     
+    console.log('Product found:', product ? product.title : 'null');
+    console.log('Product status:', product?.status);
+    
     if (!product) {
+      console.log('Product not found in database');
       return res.status(404).json({ message: 'Product not found' });
     }
     
     // If product is not active, only allow the seller or admin to view it
     // For buyers, they should only see active products
     if (product.status !== 'active') {
+      console.log('Product is not active, checking authentication...');
       // Check if user is authenticated and is the owner
-      const token = req.cookies.token;
+      const token = req.cookies.access_token || req.cookies.token;
+      console.log('Token found:', !!token);
+      
       if (token) {
         try {
           const jwt = require('jsonwebtoken');
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET);
+          console.log('Decoded user:', decoded.sub, 'Role:', decoded.role);
+          console.log('Product seller:', product.sellerId._id.toString());
+          
           // Allow if user is the seller or an admin
           if (decoded.sub !== product.sellerId._id.toString() && decoded.role !== 'admin') {
+            console.log('User is not the owner or admin');
             return res.status(404).json({ message: 'Product not found' });
           }
+          console.log('User authorized to view this product');
         } catch (err) {
+          console.error('Token verification error:', err);
           return res.status(404).json({ message: 'Product not found' });
         }
       } else {
         // No token, user is not authenticated, don't show non-active products
+        console.log('No token found, not showing non-active product');
         return res.status(404).json({ message: 'Product not found' });
       }
     }
     
+    console.log('Returning product:', product.title);
     return res.json({ product });
   } catch (error) {
     console.error('Product fetch error:', error);
@@ -223,18 +265,27 @@ router.put('/:id', authRequired, async (req, res) => {
 // Delete product (farmers only)
 router.delete('/:id', authRequired, async (req, res) => {
   try {
+    console.log('=== Delete Product Request ===');
+    console.log('Product ID:', req.params.id);
+    console.log('User ID:', req.user.sub);
+    
     const product = await Product.findById(req.params.id);
     
     if (!product) {
+      console.log('Product not found');
       return res.status(404).json({ message: 'Product not found' });
     }
     
+    console.log('Product seller ID:', product.sellerId.toString());
+    
     if (product.sellerId.toString() !== req.user.sub) {
+      console.log('User not authorized to delete this product');
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
     
     await Product.findByIdAndDelete(req.params.id);
     
+    console.log('Product deleted successfully:', product.title);
     return res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Product deletion error:', error);

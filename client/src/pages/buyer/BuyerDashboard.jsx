@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
+import { useCart } from '../../contexts/CartContext.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { TrendingUp, Package, ShoppingCart } from 'lucide-react'
 import MagicBento from '../../components/MagicBento.jsx'
@@ -11,10 +12,12 @@ import MagicCard from '../../components/MagicCard.jsx'
 export default function BuyerDashboard() {
   const { user } = useAuth()
   const { isDarkMode } = useTheme()
+  const { addToCart: addToCartContext } = useCart()
   const navigate = useNavigate()
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [buyerName, setBuyerName] = useState('')
+  const [cartLoading, setCartLoading] = useState(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -36,7 +39,10 @@ export default function BuyerDashboard() {
       setBuyerName(profileName)
       
       // Fetch featured products from real API
+      console.log('Fetching featured products...')
       const productsResponse = await api.getProducts({ limit: 6 })
+      console.log('Featured products response:', productsResponse)
+      console.log('Featured products count:', productsResponse.products?.length || 0)
       setFeaturedProducts(productsResponse.products || [])
     } catch (error) {
       console.error('Dashboard data fetch error:', error)
@@ -81,6 +87,28 @@ export default function BuyerDashboard() {
     } catch (error) {
       console.error('Chat initiation error:', error)
       alert('Failed to start conversation. Please try again.')
+    }
+  }
+
+  const handleAddToCart = async (productId) => {
+    if (!user) {
+      alert('Please login to add items to cart')
+      return
+    }
+
+    setCartLoading(productId)
+    try {
+      const success = await addToCartContext(productId, 1)
+      if (success) {
+        alert('Added to cart! 🛒')
+      } else {
+        alert('Failed to add to cart. Please try again.')
+      }
+    } catch (error) {
+      console.error('Add to cart error:', error)
+      alert('Failed to add to cart. Please try again.')
+    } finally {
+      setCartLoading(null)
     }
   }
 
@@ -201,12 +229,15 @@ export default function BuyerDashboard() {
         </div>
 
         {/* Live Chat Section */}
-        <MagicCard glowIntensity="magical" className="bg-gradient-to-r from-green-500 to-emerald-600">
+        <MagicCard glowIntensity="magical" className={`${isDarkMode 
+          ? 'bg-gradient-to-r from-green-700 to-emerald-700' 
+          : 'bg-gradient-to-r from-green-500 to-emerald-600'
+        }`}>
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold mb-2 text-gray-100">💬 Live Chat with Farmers</h2>
-                <p className="text-green-100">Connect directly with farmers for price negotiations and custom orders</p>
+                <h2 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>💬 Live Chat with Farmers</h2>
+                <p className={isDarkMode ? 'text-white/90' : 'text-gray-800'}>Connect directly with farmers for price negotiations and custom orders</p>
               </div>
               <Link 
                 to="/chat" 
@@ -277,12 +308,13 @@ export default function BuyerDashboard() {
                             </div>
                           </div>
                           <div className="flex gap-1.5">
-                            <Link 
-                              to="/buyer/products" 
-                              className="flex-1 px-2 py-1.5 bg-green-500 text-white text-center text-xs font-medium rounded-md hover:bg-green-600 transition-colors"
+                            <button 
+                              onClick={() => handleAddToCart(product._id)}
+                              disabled={cartLoading === product._id || !user}
+                              className="flex-1 px-2 py-1.5 bg-green-500 text-white text-center text-xs font-medium rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              Add to Cart
-                            </Link>
+                              {cartLoading === product._id ? 'Adding...' : 'Add to Cart'}
+                            </button>
                             <button
                               onClick={() => handleChatWithFarmer(product)}
                               className="flex-1 px-2 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 transition-colors"

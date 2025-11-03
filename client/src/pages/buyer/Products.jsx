@@ -49,13 +49,18 @@ export default function Products() {
           credentials: 'include',
         });
 
+        console.log('Products API response status:', response.status);
+
         if (response.ok) {
           const data = await response.json();
+          console.log('Raw API response:', data);
           apiProducts = data.products || [];
-          console.log('Fetched products from database:', apiProducts);
+          console.log('Total products from database:', apiProducts.length);
           
           // Filter to only show active products (extra safeguard)
+          const beforeFilter = apiProducts.length;
           apiProducts = apiProducts.filter(product => product.status === 'active');
+          console.log(`Filtered ${beforeFilter} -> ${apiProducts.length} active products`);
           
           // Transform backend data to match frontend expectations
           apiProducts = apiProducts.map(product => ({
@@ -76,11 +81,13 @@ export default function Products() {
               ? product.images 
               : ['/placeholder.jpg']
           }));
+          console.log('Transformed products:', apiProducts.length);
         } else {
-          console.log('API failed, using fallback data');
+          const errorText = await response.text();
+          console.error('API failed with status:', response.status, 'Error:', errorText);
         }
       } catch (apiError) {
-        console.log('API not available, using fallback data');
+        console.error('API error:', apiError);
       }
 
       // All products now come from database - no localStorage needed
@@ -134,7 +141,7 @@ export default function Products() {
       setAllProducts(productsWithGrades);
     } catch (error) {
       console.error('Products fetch error:', error);
-      setProducts([]);
+      setAllProducts([]);
     } finally {
       setIsLoading(false);
     }

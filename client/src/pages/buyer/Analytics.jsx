@@ -70,54 +70,9 @@ const BuyerAnalytics = () => {
       // Pass filter parameters to API
       const params = { dateRange, category: selectedCategory !== 'all' ? selectedCategory : undefined };
       const data = await api.getBuyerAnalytics(params);
-      // Add sample data if no real data exists for better demo
-      const enrichedData = {
-        ...data,
-        summary: {
-          totalSpent: data?.summary?.totalSpent || 0,
-          totalOrders: data?.summary?.totalOrders || 0,
-          totalItems: data?.summary?.totalItems || 0,
-          uniqueSellers: data?.summary?.uniqueSellers || 0,
-          averageOrderValue: data?.summary?.averageOrderValue || 0,
-          spendingGrowth: data?.summary?.spendingGrowth || 0
-        },
-        charts: {
-          monthlySpending: data?.charts?.monthlySpending?.length ? data.charts.monthlySpending : [
-            { month: 'May 2025', spent: 12000, orders: 3 },
-            { month: 'Jun 2025', spent: 15000, orders: 4 },
-            { month: 'Jul 2025', spent: 18000, orders: 5 },
-            { month: 'Aug 2025', spent: 22000, orders: 6 },
-            { month: 'Sep 2025', spent: 25000, orders: 7 },
-            { month: 'Oct 2025', spent: 28000, orders: 8 }
-          ],
-          categorySpending: data?.charts?.categorySpending?.length ? data.charts.categorySpending : [
-            { category: 'Vegetables', spent: 15000, items: 45 },
-            { category: 'Fruits', spent: 12000, items: 38 },
-            { category: 'Grains', spent: 8000, items: 25 },
-            { category: 'Dairy', spent: 5000, items: 18 }
-          ],
-          favoriteProducts: data?.charts?.favoriteProducts?.length ? data.charts.favoriteProducts : [
-            { product: { _id: '1', title: 'Organic Tomatoes', price: 80 }, quantity: 15, orders: 5, totalSpent: 1200 },
-            { product: { _id: '2', title: 'Fresh Spinach', price: 40 }, quantity: 12, orders: 4, totalSpent: 480 },
-            { product: { _id: '3', title: 'Basmati Rice', price: 120 }, quantity: 10, orders: 3, totalSpent: 1200 },
-            { product: { _id: '4', title: 'Farm Milk', price: 60 }, quantity: 8, orders: 4, totalSpent: 480 },
-            { product: { _id: '5', title: 'Organic Apples', price: 150 }, quantity: 6, orders: 2, totalSpent: 900 }
-          ],
-          statusDistribution: data?.charts?.statusDistribution?.length ? data.charts.statusDistribution : [
-            { name: 'Delivered', value: 12, status: 'delivered' },
-            { name: 'Shipped', value: 3, status: 'shipped' },
-            { name: 'Pending', value: 2, status: 'pending' }
-          ]
-        },
-        recentOrders: data?.recentOrders?.length ? data.recentOrders : [
-          { _id: '670e1a2b3c4d5e6f7a8b9c0d', items: 3, totalAmount: 2400, status: 'delivered', date: new Date('2025-10-12') },
-          { _id: '670e1a2b3c4d5e6f7a8b9c0e', items: 2, totalAmount: 1800, status: 'shipped', date: new Date('2025-10-10') },
-          { _id: '670e1a2b3c4d5e6f7a8b9c0f', items: 1, totalAmount: 600, status: 'pending', date: new Date('2025-10-08') },
-          { _id: '670e1a2b3c4d5e6f7a8b9c10', items: 4, totalAmount: 3200, status: 'delivered', date: new Date('2025-10-05') }
-        ]
-      };
       
-      setAnalytics(enrichedData);
+      // Use real data from API
+      setAnalytics(data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setError('Failed to load analytics data');
@@ -137,17 +92,17 @@ const BuyerAnalytics = () => {
 
   // Monthly Purchase Activity Chart with Curved Squares
   const PurchaseActivityChart = React.memo(({ data = [] }) => {
-    const maxPurchases = useMemo(() => Math.max(...data.map(d => d.purchases || 0), 1), [data]);
+    const maxPurchases = useMemo(() => Math.max(...data.map(d => d.purchases || d.orders || 0), 1), [data]);
     
     // Get color intensity based on purchase count
     const getSquareColor = (purchases) => {
       const intensity = purchases / maxPurchases;
-      if (intensity === 0) return '#1f2937'; // dark gray for no purchases
-      if (intensity <= 0.2) return '#064e3b'; // very light green
-      if (intensity <= 0.4) return '#065f46'; // light green
-      if (intensity <= 0.6) return '#047857'; // medium green
-      if (intensity <= 0.8) return '#059669'; // bright green
-      return '#10b981'; // brightest green
+      if (intensity === 0) return isDarkMode ? '#1f2937' : '#e5e7eb'; // dark/light gray for no purchases
+      if (intensity <= 0.2) return isDarkMode ? '#064e3b' : '#a7f3d0'; // very light green
+      if (intensity <= 0.4) return isDarkMode ? '#065f46' : '#6ee7b7'; // light green
+      if (intensity <= 0.6) return isDarkMode ? '#047857' : '#34d399'; // medium green
+      if (intensity <= 0.8) return isDarkMode ? '#059669' : '#10b981'; // bright green
+      return isDarkMode ? '#10b981' : '#059669'; // brightest green
     };
 
     // Create height levels for visual representation (like the chart columns)
@@ -160,128 +115,137 @@ const BuyerAnalytics = () => {
         squares.push({
           id: i,
           isActive,
-          color: isActive ? getSquareColor(purchases) : '#1f2937',
+          color: isActive ? getSquareColor(purchases) : (isDarkMode ? '#1f2937' : '#f3f4f6'),
           purchases: isActive ? purchases : 0
         });
       }
       return squares.reverse(); // Bottom to top
     };
 
+    const totalSpent = data.reduce((sum, d) => sum + (d.spent || 0), 0);
+    const avgPurchases = data.length > 0 ? Math.round(data.reduce((sum, d) => sum + (d.purchases || d.orders || 0), 0) / data.length) : 0;
+    const peakPurchases = Math.max(...data.map(d => d.purchases || d.orders || 0), 0);
+    const growthRate = data.length >= 2 
+      ? Math.round(((data[data.length - 1]?.purchases || 0) / (data[0]?.purchases || 1)) * 100)
+      : 0;
+
     return (
       <div className="w-full">
         {/* Chart Value Display */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-emerald-400 text-3xl font-bold">
-            {formatCurrency(data.reduce((sum, d) => sum + (d.spent || 0), 0))}
+            {formatCurrency(totalSpent)}
           </div>
-          <div className="text-right">
-            <div className="text-emerald-400 text-lg">
-              +{Math.round((data[data.length - 1]?.purchases || 0) / (data[0]?.purchases || 1) * 100)}%
+          {data.length > 0 && (
+            <div className="text-right">
+              <div className="text-emerald-400 text-lg">
+                +{growthRate}%
+              </div>
+              <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Growth rate</div>
             </div>
-            <div className="text-gray-400 text-sm">Increased vs last month</div>
-          </div>
+          )}
         </div>
 
         {/* Chart Container */}
         <div className="relative">
-          {/* Y-axis labels */}
-          <div className="flex">
-            <div className="flex flex-col justify-between h-48 text-xs text-gray-500 mr-6 py-2">
-              <span className="leading-none">{maxPurchases}</span>
-              <span className="leading-none">{Math.round(maxPurchases * 0.75)}</span>
-              <span className="leading-none">{Math.round(maxPurchases * 0.5)}</span>
-              <span className="leading-none">{Math.round(maxPurchases * 0.25)}</span>
-              <span className="leading-none">0</span>
+          {data.length === 0 ? (
+            <div className={`flex flex-col items-center justify-center h-48 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <div className="text-4xl mb-3">📈</div>
+              <p className="font-medium">No purchase data available</p>
+              <p className="text-sm mt-1">Start shopping to see your activity</p>
             </div>
-            
-            {/* Chart Columns */}
-            <div className="flex-1">
-              {data.length === 0 ? (
-                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
-                  No purchase data available
+          ) : (
+            <>
+              {/* Y-axis labels */}
+              <div className="flex">
+                <div className={`flex flex-col justify-between h-48 text-xs mr-6 py-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                  <span className="leading-none">{maxPurchases}</span>
+                  <span className="leading-none">{Math.round(maxPurchases * 0.75)}</span>
+                  <span className="leading-none">{Math.round(maxPurchases * 0.5)}</span>
+                  <span className="leading-none">{Math.round(maxPurchases * 0.25)}</span>
+                  <span className="leading-none">0</span>
                 </div>
-              ) : (
-                <div className="flex items-end justify-between h-48 gap-2">
-                  {data.map((monthData, index) => {
-                    const purchases = monthData.purchases || monthData.orders || 0;
-                    const squares = createColumnSquares(purchases, 8);
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1">
-                        {/* Column of squares */}
-                        <div className="flex flex-col gap-1 items-center justify-end h-full">
-                          {squares.map((square) => (
-                            <div
-                              key={square.id}
-                              className="w-6 h-6 rounded-lg cursor-pointer hover:scale-110 transition-all duration-200 border border-gray-800"
-                              style={{ backgroundColor: square.color }}
-                              title={`${monthData.month}: ${purchases} purchases - ${formatCurrency(monthData.spent || 0)}`}
-                            />
-                          ))}
+                
+                {/* Chart Columns */}
+                <div className="flex-1">
+                  <div className="flex items-end justify-between h-48 gap-2">
+                    {data.map((monthData, index) => {
+                      const purchases = monthData.purchases || monthData.orders || 0;
+                      const squares = createColumnSquares(purchases, 8);
+                      
+                      return (
+                        <div key={index} className="flex flex-col items-center flex-1">
+                          {/* Column of squares */}
+                          <div className="flex flex-col gap-1 items-center justify-end h-full">
+                            {squares.map((square) => (
+                              <div
+                                key={square.id}
+                                className={`w-6 h-6 rounded-lg cursor-pointer hover:scale-110 transition-all duration-200 ${isDarkMode ? 'border border-gray-800' : 'border border-gray-200'}`}
+                                style={{ backgroundColor: square.color }}
+                                title={`${monthData.month}: ${purchases} purchases - ${formatCurrency(monthData.spent || 0)}`}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* X-axis labels */}
-        {data.length > 0 && (
-          <div className="flex justify-between mt-4 ml-6">
-            {data.map((monthData, index) => (
-              <div key={index} className="text-xs text-gray-500 text-center flex-1">
-                {monthData.month}
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* Legend */}
-        {data.length > 0 && (
-          <div className="mt-8 space-y-4">
-            {/* Activity Legend */}
-            <div className="flex items-center justify-center gap-4">
-              <span className="text-xs text-gray-500">Less Activity</span>
-              <div className="flex gap-1">
-                {[0, 0.2, 0.4, 0.6, 0.8, 1].map((intensity, index) => (
-                  <div
-                    key={index}
-                    className="w-3 h-3 rounded"
-                    style={{ backgroundColor: getSquareColor(intensity * maxPurchases) }}
-                  />
+              {/* X-axis labels */}
+              <div className="flex justify-between mt-4 ml-6">
+                {data.map((monthData, index) => (
+                  <div key={index} className={`text-xs text-center flex-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                    {monthData.month}
+                  </div>
                 ))}
               </div>
-              <span className="text-xs text-gray-500">More Activity</span>
-            </div>
-            
-            {/* Stats */}
-            <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
-              <span>Avg: {Math.round(data.reduce((sum, d) => sum + (d.purchases || 0), 0) / data.length || 0)} purchases/month</span>
-              <span>Peak: {Math.max(...data.map(d => d.purchases || 0))} purchases</span>
-            </div>
-          </div>
-        )}
+
+              {/* Legend */}
+              <div className="mt-8 space-y-4">
+                {/* Activity Legend */}
+                <div className="flex items-center justify-center gap-4">
+                  <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-600'}`}>Less Activity</span>
+                  <div className="flex gap-1">
+                    {[0, 0.2, 0.4, 0.6, 0.8, 1].map((intensity, index) => (
+                      <div
+                        key={index}
+                        className="w-3 h-3 rounded"
+                        style={{ backgroundColor: getSquareColor(intensity * maxPurchases) }}
+                      />
+                    ))}
+                  </div>
+                  <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-600'}`}>More Activity</span>
+                </div>
+                
+                {/* Stats */}
+                <div className={`flex items-center justify-center gap-6 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span>Avg: {avgPurchases} purchases/month</span>
+                  <span>Peak: {peakPurchases} purchases</span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1a1d24]">
+      <div className={`min-h-screen ${isDarkMode ? 'bg-[#1a1d24]' : 'bg-gray-50'}`}>
         <div className="p-6 max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-800 rounded w-1/3"></div>
+            <div className={`h-8 rounded w-1/3 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-32 bg-gray-800 rounded-lg"></div>
+                <div key={i} className={`h-32 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
               ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 h-96 bg-gray-800 rounded-lg"></div>
-              <div className="h-96 bg-gray-800 rounded-lg"></div>
+              <div className={`lg:col-span-2 h-96 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
+              <div className={`h-96 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
             </div>
           </div>
         </div>
@@ -291,9 +255,9 @@ const BuyerAnalytics = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#1a1d24]">
+      <div className={`min-h-screen ${isDarkMode ? 'bg-[#1a1d24]' : 'bg-gray-50'}`}>
         <div className="p-6 max-w-7xl mx-auto">
-          <div className="bg-gray-800 border border-red-700 rounded-lg text-center py-12">
+          <div className={`border border-red-700 rounded-lg text-center py-12 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h3 className="text-xl font-semibold mb-2 text-red-400">Analytics Error</h3>
             <p className="mb-4 text-red-300">{error}</p>
@@ -319,6 +283,20 @@ const BuyerAnalytics = () => {
             <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Track your purchasing behavior and spending insights</p>
           </div>
 
+          {/* Filters */}
+          <div className="flex gap-3">
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className={`px-4 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}
+            >
+              <option value="1month">Last Month</option>
+              <option value="3months">Last 3 Months</option>
+              <option value="6months">Last 6 Months</option>
+              <option value="12months">Last 12 Months</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -427,7 +405,7 @@ const BuyerAnalytics = () => {
           {/* Product List */}
           <div className={`${isDarkMode ? 'bg-[#252930] border-gray-800' : 'bg-white border-gray-200'} rounded-lg border p-6`}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>Product List</h3>
+              <h3 className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>Top Products</h3>
               <div className="relative">
                 <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                 <input
@@ -440,95 +418,126 @@ const BuyerAnalytics = () => {
               </div>
             </div>
             
-            <div className="space-y-1">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-3 py-2 text-xs font-medium text-gray-500">
-                <div className="col-span-6">Product</div>
-                <div className="col-span-3 text-center">Stock</div>
-                <div className="col-span-3 text-right">Order</div>
+            {(analytics?.charts?.favoriteProducts || []).length === 0 ? (
+              <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No product data available</p>
+                <p className="text-sm mt-1">Start shopping to see your favorite products</p>
               </div>
-              
-              {/* Table Rows */}
-              {[
-                { id: 'g', name: 'garlic', price: 30, stock: 4, orders: 3 },
-                { id: 'l', name: 'litchi', price: 110, stock: 2, orders: 1 },
-                { id: 'b', name: 'Bananas', price: 40, stock: 1, orders: 1 }
-              ].filter(item => 
-                item.name.toLowerCase().includes(productSearchTerm.toLowerCase())
-              ).map((item, index) => (
-                <div key={item.id} className={`grid grid-cols-12 gap-4 items-center px-3 py-3 ${isDarkMode ? 'hover:bg-gray-800/30' : 'hover:bg-gray-100'} rounded-lg transition-colors`}>
-                  <div className="col-span-6 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">
-                        {item.id}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium text-sm`}>
-                        {item.name}
-                      </div>
-                      <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-xs`}>
-                        ₹{item.price} each
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-span-3 text-center">
-                    <span className="text-white text-lg font-bold">{item.stock}</span>
-                  </div>
-                  <div className="col-span-3 text-right">
-                    <div className="text-white text-lg font-bold">{item.orders}</div>
-                    <div className="text-gray-400 text-xs">total orders</div>
-                  </div>
+            ) : (
+              <div className="space-y-1">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 px-3 py-2 text-xs font-medium text-gray-500">
+                  <div className="col-span-6">Product</div>
+                  <div className="col-span-3 text-center">Quantity</div>
+                  <div className="col-span-3 text-right">Orders</div>
                 </div>
-              ))}
-            </div>
+                
+                {/* Table Rows */}
+                {(analytics?.charts?.favoriteProducts || [])
+                  .filter(item => 
+                    item.product?.title?.toLowerCase().includes(productSearchTerm.toLowerCase())
+                  )
+                  .slice(0, 5)
+                  .map((item, index) => (
+                    <div key={item.product?._id || index} className={`grid grid-cols-12 gap-4 items-center px-3 py-3 ${isDarkMode ? 'hover:bg-gray-800/30' : 'hover:bg-gray-100'} rounded-lg transition-colors`}>
+                      <div className="col-span-6 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-500 rounded flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {item.product?.title?.charAt(0).toUpperCase() || 'P'}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
+                            {item.product?.title || 'Unknown Product'}
+                          </div>
+                          <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-xs`}>
+                            ₹{item.product?.price || 0} each
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-span-3 text-center">
+                        <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-bold`}>{item.quantity || 0}</span>
+                      </div>
+                      <div className="col-span-3 text-right">
+                        <div className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-bold`}>{item.orders || 0}</div>
+                        <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-xs`}>total orders</div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Category Spending */}
           <div className={`${isDarkMode ? 'bg-[#252930] border-gray-800' : 'bg-white border-gray-200'} rounded-lg border p-6`}>
             <h3 className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold mb-6`}>Category Spending</h3>
             
-            <div className="flex items-center justify-center mb-6">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { category: 'Fruits', spent: 68, color: '#10b981' },
-                      { category: 'Vegetables', spent: 32, color: '#059669' }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="spent"
-                  >
-                    {[
-                      { category: 'Fruits', spent: 68, color: '#10b981' },
-                      { category: 'Vegetables', spent: 32, color: '#059669' }
-                    ].map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            
-            {/* Legend */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-emerald-500 rounded"></div>
-                  <span className="text-gray-300 text-sm">Fruits: 68%</span>
-                </div>
+            {(analytics?.charts?.categorySpending || []).length === 0 ? (
+              <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <div className="text-4xl mb-3">📊</div>
+                <p>No category data available</p>
+                <p className="text-sm mt-1">Make purchases to see spending breakdown</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-emerald-600 rounded"></div>
-                  <span className="text-gray-300 text-sm">Vegetables: 32%</span>
+            ) : (
+              <>
+                <div className="flex items-center justify-center mb-6">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={(analytics?.charts?.categorySpending || []).map((cat, index) => ({
+                          ...cat,
+                          color: ['#10b981', '#059669', '#047857', '#065f46', '#064e3b'][index % 5]
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={80}
+                        paddingAngle={2}
+                        dataKey="spent"
+                      >
+                        {(analytics?.charts?.categorySpending || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={['#10b981', '#059669', '#047857', '#065f46', '#064e3b'][index % 5]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => formatCurrency(value)}
+                        contentStyle={{
+                          backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                          border: isDarkMode ? '1px solid #374151' : '1px solid #e5e7eb',
+                          borderRadius: '8px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              </div>
-            </div>
+                
+                {/* Legend */}
+                <div className="space-y-3">
+                  {(analytics?.charts?.categorySpending || []).slice(0, 5).map((cat, index) => {
+                    const total = (analytics?.charts?.categorySpending || []).reduce((sum, c) => sum + c.spent, 0);
+                    const percentage = total > 0 ? ((cat.spent / total) * 100).toFixed(0) : 0;
+                    
+                    return (
+                      <div key={cat.category || index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded" 
+                            style={{ backgroundColor: ['#10b981', '#059669', '#047857', '#065f46', '#064e3b'][index % 5] }}
+                          ></div>
+                          <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-sm`}>
+                            {cat.category}: {percentage}%
+                          </span>
+                        </div>
+                        <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
+                          {formatCurrency(cat.spent)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

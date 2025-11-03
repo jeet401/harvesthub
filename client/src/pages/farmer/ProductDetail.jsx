@@ -22,11 +22,18 @@ const ProductDetail = () => {
 
   const fetchProductDetails = async () => {
     try {
+      console.log('=== Fetching product details ===');
+      console.log('Product ID:', id);
+      console.log('API URL:', `${import.meta.env.VITE_API_BASE_URL}/api/products/${id}`);
+      
       // Try to fetch product from backend API first
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${id}`, {
         method: 'GET',
         credentials: 'include',
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
 
       let foundProduct = null;
 
@@ -113,6 +120,7 @@ const ProductDetail = () => {
       }
 
       if (foundProduct) {
+        console.log('Setting product:', foundProduct);
         setProduct(foundProduct);
         
         setFarmer({
@@ -125,9 +133,11 @@ const ProductDetail = () => {
           delivery: 'Available'
         });
       } else {
+        console.log('Product not found, setting to null');
         setProduct(null);
       }
 
+      console.log('Setting loading to false');
       setLoading(false);
     } catch (error) {
       console.error('Error fetching product details:', error);
@@ -229,27 +239,35 @@ const ProductDetail = () => {
   };
 
   if (loading) {
+    console.log('Rendering loading state');
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Loading...</div>
+      <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg text-gray-700">Loading product details...</div>
+          </div>
         </div>
-      </div>
+      </MagicBento>
     );
   }
 
   if (!product) {
+    console.log('Rendering product not found state');
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h2>
-          <Button onClick={() => navigate('/farmer/dashboard')}>
-            Back to Dashboard
-          </Button>
+      <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h2>
+            <Button onClick={() => navigate('/farmer/dashboard')}>
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
-      </div>
+      </MagicBento>
     );
   }
+
+  console.log('Rendering product details for:', product.title);
 
   return (
     <MagicBento className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">

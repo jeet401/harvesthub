@@ -552,121 +552,104 @@ const AddProduct = () => {
 
             {/* AGMARK Certificate Section */}
             <div className="border-t pt-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <input
-                  type="checkbox"
-                  id="hasAgmark"
-                  checked={formData.hasAgmarkCertificate}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    hasAgmarkCertificate: e.target.checked
-                  }))}
-                  className="w-4 h-4 text-green-600 bg-white border-gray-300 rounded focus:ring-green-500"
-                />
-                <label htmlFor="hasAgmark" className="text-sm font-medium text-gray-700">
-                  I have AGMARK Certificate (Optional but Recommended)
-                </label>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                AGMARK Certificate (Required for product to be listed)
+              </h3>
 
-              {formData.hasAgmarkCertificate && (
-                <div className="space-y-4 pl-6 border-l-2 border-green-200">
-                  <p className="text-sm text-green-600 mb-4">
-                    ✓ AGMARK certified products get higher visibility and trust from buyers!
-                  </p>
+              <div className="space-y-4">
+                <p className="text-sm text-green-600 mb-4">
+                  ✓ AGMARK certified products get higher visibility and trust from buyers!
+                </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Certificate Number *
-                      </label>
-                      <input
-                        type="text"
-                        name="agmarkCertificateNumber"
-                        required={formData.hasAgmarkCertificate}
-                        value={formData.agmarkCertificateNumber}
-                        onChange={handleInputChange}
-                        placeholder="e.g., AG-MH-2024-12345"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        AGMARK Grade *
-                      </label>
-                      <select
-                        name="agmarkGrade"
-                        required={formData.hasAgmarkCertificate}
-                        value={formData.agmarkGrade}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      >
-                        <option value="A+">A+ (Premium)</option>
-                        <option value="A">A (Excellent)</option>
-                        <option value="B">B (Good)</option>
-                        <option value="C">C (Standard)</option>
-                      </select>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Certificate Number
+                    </label>
+                    <input
+                      type="text"
+                      name="agmarkCertificateNumber"
+                      value={formData.agmarkCertificateNumber}
+                      onChange={handleInputChange}
+                      placeholder="e.g., AG-MH-2024-12345"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Certificate (PDF/Image) *
+                      AGMARK Grade
                     </label>
-                    
-                    {!certificatePreview ? (
-                      <div className="border-2 border-dashed border-green-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors bg-green-50">
-                        <input
-                          type="file"
-                          accept=".pdf,image/jpeg,image/png"
-                          onChange={handleCertificateUpload}
-                          required={formData.hasAgmarkCertificate}
-                          className="hidden"
-                          id="certificate-upload"
-                        />
-                        <label htmlFor="certificate-upload" className="cursor-pointer">
-                          <div className="flex flex-col items-center">
-                            <Upload className="h-10 w-10 text-green-500 mb-3" />
-                            <p className="text-sm text-gray-700 mb-1">
-                              Click to upload AGMARK certificate
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              PDF, JPEG, PNG up to 2MB
-                            </p>
-                          </div>
-                        </label>
-                      </div>
-                    ) : (
-                      <div className="relative bg-green-50 border-2 border-green-300 rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="bg-green-100 p-2 rounded">
-                              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{certificatePreview}</p>
-                              <p className="text-xs text-green-600">Certificate uploaded ✓</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={removeCertificate}
-                            className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <p className="text-xs text-gray-500 mt-2">
-                      Note: Certificate will be verified by admin. Product will be marked as "Pending Verification" until approved.
-                    </p>
+                    <select
+                      name="agmarkGrade"
+                      value={formData.agmarkGrade}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    >
+                      <option value="A+">A+ (Premium)</option>
+                      <option value="A">A (Excellent)</option>
+                      <option value="B">B (Good)</option>
+                      <option value="C">C (Standard)</option>
+                    </select>
                   </div>
                 </div>
-              )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Certificate (PDF/Image)
+                  </label>
+                  
+                  {!certificatePreview ? (
+                    <div className="border-2 border-dashed border-green-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors bg-green-50">
+                      <input
+                        type="file"
+                        accept=".pdf,image/jpeg,image/png"
+                        onChange={handleCertificateUpload}
+                        className="hidden"
+                        id="certificate-upload"
+                      />
+                      <label htmlFor="certificate-upload" className="cursor-pointer">
+                        <div className="flex flex-col items-center">
+                          <Upload className="h-10 w-10 text-green-500 mb-3" />
+                          <p className="text-sm text-gray-700 mb-1">
+                            Click to upload AGMARK certificate
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            PDF, JPEG, PNG up to 2MB
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="relative bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-green-100 p-2 rounded">
+                            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{certificatePreview}</p>
+                            <p className="text-xs text-green-600">Certificate uploaded ✓</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeCertificate}
+                          className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-500 mt-2">
+                    Note: Certificate will be verified by admin. Product will be marked as "Pending Verification" until approved.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">

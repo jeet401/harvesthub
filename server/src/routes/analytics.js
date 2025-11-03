@@ -172,6 +172,8 @@ router.get('/buyer', authRequired, async (req, res) => {
     const buyerId = req.user.sub;
     const { dateRange = '12months', category } = req.query;
     
+    console.log('Fetching buyer analytics for:', buyerId, 'dateRange:', dateRange);
+    
     // Build date filter based on dateRange
     let dateFilter = {};
     const now = new Date();
@@ -217,10 +219,12 @@ router.get('/buyer', authRequired, async (req, res) => {
       .populate('items.sellerId', 'email role')
       .sort({ createdAt: -1 });
 
+    console.log(`Found ${orders.length} orders for buyer ${buyerId}`);
+
     // Get seller profiles separately
     const sellerIds = [...new Set(orders.flatMap(order => 
-      order.items.map(item => item.sellerId?._id)
-    ).filter(Boolean))];
+      order.items.map(item => item.sellerId?._id).filter(Boolean)
+    ))];
 
     const profiles = await Profile.find({ userId: { $in: sellerIds } });
 
@@ -239,10 +243,10 @@ router.get('/buyer', authRequired, async (req, res) => {
     const totalSpent = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
     const totalOrders = filteredOrders.length;
     const totalItems = filteredOrders.reduce((sum, order) => 
-      sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
+      sum + order.items.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0), 0
     );
     const uniqueSellers = [...new Set(filteredOrders.flatMap(order => 
-      order.items.map(item => item.sellerId._id.toString())
+      order.items.map(item => item.sellerId?._id?.toString()).filter(Boolean)
     ))].length;
 
     // Monthly spending (last 6 months)
@@ -288,6 +292,9 @@ router.get('/buyer', authRequired, async (req, res) => {
     const productFrequency = {};
     filteredOrders.forEach(order => {
       order.items.forEach(item => {
+        // Skip items with null/undefined products
+        if (!item.productId || !item.productId._id) return;
+        
         const productId = item.productId._id.toString();
         if (!productFrequency[productId]) {
           productFrequency[productId] = {
@@ -297,9 +304,9 @@ router.get('/buyer', authRequired, async (req, res) => {
             totalSpent: 0
           };
         }
-        productFrequency[productId].quantity += item.quantity;
+        productFrequency[productId].quantity += item.quantity || 0;
         productFrequency[productId].orders += 1;
-        productFrequency[productId].totalSpent += item.totalPrice;
+        productFrequency[productId].totalSpent += item.totalPrice || 0;
       });
     });
 
@@ -311,6 +318,17 @@ router.get('/buyer', authRequired, async (req, res) => {
     const recentOrders = orders.slice(0, 10).map(order => {
       // Enrich order items with seller profile data
       const enrichedItems = order.items.map(item => {
+        // Handle missing seller data
+        if (!item.sellerId || !item.sellerId._id) {
+          return {
+            productId: item.productId,
+            sellerId: null,
+            quantity: item.quantity,
+            price: item.price,
+            totalPrice: item.totalPrice
+          };
+        }
+
         const sellerProfile = profiles.find(p => 
           p.userId && item.sellerId && p.userId.toString() === item.sellerId._id.toString()
         );
@@ -404,7 +422,11 @@ router.get('/buyer', authRequired, async (req, res) => {
 
   } catch (error) {
     console.error('Buyer analytics error:', error);
-    return res.status(500).json({ message: 'Failed to fetch buyer analytics' });
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ 
+      message: 'Failed to fetch buyer analytics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

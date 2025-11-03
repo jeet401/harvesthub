@@ -87,35 +87,28 @@ const FarmerDashboard = () => {
   };
 
   const handleDeleteCrop = async (cropId) => {
-    if (!confirm('Are you sure you want to delete this crop?')) return;
+    if (!confirm('Are you sure you want to delete this crop? This action cannot be undone.')) return;
     
     try {
-      // Delete from backend database
-      const { api } = await import('../../lib/api.js');
-      console.log('Deleting database product:', cropId);
+      console.log('Deleting product:', cropId);
       
-      // TODO: Implement delete endpoint in backend
-      // await api.deleteProduct(cropId);
-      
-      alert('Delete functionality will be implemented soon. For now, please contact admin.');
-      
-      // Uncomment when backend DELETE endpoint is ready:
-      /*
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${cropId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
       
       if (response.ok) {
-        fetchFarmerData();
-        alert('Product deleted successfully!');
+        console.log('Product deleted successfully');
+        alert('Product deleted successfully! 🗑️');
+        fetchFarmerData(); // Refresh the product list
       } else {
-        alert('Failed to delete product');
+        const errorData = await response.json();
+        console.error('Failed to delete product:', errorData);
+        alert('Failed to delete product: ' + (errorData.message || 'Unknown error'));
       }
-      */
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert('Error deleting product');
+      alert('Error deleting product. Please try again.');
     }
   };
 
@@ -171,8 +164,8 @@ const FarmerDashboard = () => {
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold mb-2 text-gray-100">💬 Connect with Buyers</h2>
-                <p className="text-blue-100">Chat with potential buyers, negotiate prices, and build relationships</p>
+                <h2 className="text-2xl font-bold mb-2 text-black">💬 Connect with Buyers</h2>
+                <p className="text-black">Chat with potential buyers, negotiate prices, and build relationships</p>
               </div>
               <button 
                 onClick={() => navigate('/chat')}
