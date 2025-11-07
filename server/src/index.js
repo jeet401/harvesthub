@@ -23,6 +23,9 @@ app.use(
   cors({
     origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Set-Cookie']
   })
 );
 app.use(helmet());
@@ -52,6 +55,25 @@ app.use('/api', require('./routes/notifications')); // Notification routes
 
 // Socket.io connection handling
 require('./lib/socket')(io);
+
+// 404 handler
+app.use('*', (req, res) => {
+  console.log('404 - Route not found:', req.originalUrl);
+  res.status(404).json({ 
+    message: 'Route not found',
+    path: req.originalUrl,
+    method: req.method
+  });
+});
+
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : error.message
+  });
+});
 
 const PORT = process.env.PORT || 3000;
 
