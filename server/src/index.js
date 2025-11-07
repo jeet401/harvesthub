@@ -42,7 +42,7 @@ app.get('/', (req, res) => res.json({
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-// API routes (to be implemented)
+// API routes
 app.use('/api/auth', require('./routes/auth')); // signup/login/logout
 app.use('/api/products', require('./routes/products'));
 app.use('/api/cart', require('./routes/cart'));
@@ -52,17 +52,6 @@ app.use('/api/chat', require('./routes/chat')); // Chat routes
 app.use('/api/analytics', require('./routes/analytics')); // Analytics routes
 app.use('/api/admin', require('./routes/admin')); // Admin routes
 app.use('/api', require('./routes/notifications')); // Notification routes
-
-// Make sure all these routes are properly mounted:
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/cart', require('./routes/cart'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/payment', require('./routes/payment'));
-app.use('/api/chat', require('./routes/chat'));
-app.use('/api/analytics', require('./routes/analytics'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api', require('./routes/notifications'));
 
 // Socket.io connection handling
 require('./lib/socket')(io);
