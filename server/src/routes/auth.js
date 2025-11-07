@@ -5,6 +5,26 @@ const { signAccessToken, signRefreshToken, setAuthCookies } = require('../utils/
 const { authRequired } = require('../middleware/auth');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
+const cors = require('cors');
+
+// For login and refresh token endpoints, update cookie options:
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production', // Only HTTPS in production
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-origin cookies
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
+};
+
+router.use(
+  cors({
+    origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Set-Cookie']
+  })
+);
 
 router.post('/signup', async (req, res) => {
   try {
@@ -55,6 +75,10 @@ router.post('/login', async (req, res) => {
     const refreshToken = signRefreshToken({ sub: user._id.toString() });
     setAuthCookies(res, { accessToken, refreshToken });
     
+    // Set cookies with updated options
+    res.cookie('access_token', accessToken, cookieOptions);
+    res.cookie('refresh_token', refreshToken, cookieOptions);
+    
     return res.json({ user: { id: user._id, email: user.email, role: user.role } });
   } catch (err) {
     console.error(err);
@@ -74,6 +98,11 @@ router.post('/refresh', async (req, res) => {
     
     const accessToken = signAccessToken({ sub: payload.sub, role: user.role });
     setAuthCookies(res, { accessToken, refreshToken: token });
+    
+    // Set cookies with updated options
+    res.cookie('access_token', accessToken, cookieOptions);
+    res.cookie('refresh_token', token, cookieOptions);
+    
     return res.json({ 
       ok: true, 
       user: { id: user._id, email: user.email, role: user.role }
