@@ -5,26 +5,6 @@ const { signAccessToken, signRefreshToken, setAuthCookies } = require('../utils/
 const { authRequired } = require('../middleware/auth');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
-const cors = require('cors');
-
-// For login and refresh token endpoints, update cookie options:
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // Only HTTPS in production
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-origin cookies
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  path: '/'
-};
-
-router.use(
-  cors({
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Set-Cookie']
-  })
-);
 
 router.post('/signup', async (req, res) => {
   try {
