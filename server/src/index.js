@@ -50,8 +50,38 @@ app.use('/api/analytics', require('./routes/analytics')); // Analytics routes
 app.use('/api/admin', require('./routes/admin')); // Admin routes
 app.use('/api', require('./routes/notifications')); // Notification routes
 
+// Make sure all these routes are properly mounted:
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/products', require('./routes/products'));
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/payment', require('./routes/payment'));
+app.use('/api/chat', require('./routes/chat'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api', require('./routes/notifications'));
+
 // Socket.io connection handling
 require('./lib/socket')(io);
+
+// 404 handler
+app.use('*', (req, res) => {
+  console.log('404 - Route not found:', req.originalUrl);
+  res.status(404).json({ 
+    message: 'Route not found',
+    path: req.originalUrl,
+    method: req.method
+  });
+});
+
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : error.message
+  });
+});
 
 const PORT = process.env.PORT || 3000;
 
