@@ -8,7 +8,7 @@ const translations = {
       home: 'Home',
       howItWorks: 'How it works',
       signIn: 'Sign in',
-      signUpFarmer: 'Sign up as Farmer',
+      signUp: 'Sign up',
     },
   },
   hi: {
@@ -16,7 +16,7 @@ const translations = {
       home: 'होम',
       howItWorks: 'यह कैसे काम करता है',
       signIn: 'साइन इन',
-      signUpFarmer: 'फार्मर के रूप में साइन अप',
+      signUp: 'साइन अप',
     },
   },
 }

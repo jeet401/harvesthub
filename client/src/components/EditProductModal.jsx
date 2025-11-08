@@ -12,9 +12,12 @@ const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
     harvestDate: '',
     agmarkGrade: 'A+ (Premium)',
     description: '',
-    photoUrl: ''
+    photoUrl: '',
+    agmarkCertificateUrl: '',
+    agmarkCertificateNumber: ''
   });
   const [imagePreview, setImagePreview] = useState(null);
+  const [certificatePreview, setCertificatePreview] = useState(null);
 
   useEffect(() => {
     if (product && isOpen) {
@@ -26,9 +29,12 @@ const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
         harvestDate: product.harvestDate || '',
         agmarkGrade: product.grade === 'A+' ? 'A+ (Premium)' : product.grade || 'A+ (Premium)',
         description: product.description || '',
-        photoUrl: product.imageUrl || ''
+        photoUrl: product.imageUrl || '',
+        agmarkCertificateUrl: product.agmarkCertificateUrl || '',
+        agmarkCertificateNumber: product.agmarkCertificateNumber || ''
       });
       setImagePreview(product.imageUrl || null);
+      setCertificatePreview(product.agmarkCertificateUrl || null);
     }
   }, [product, isOpen]);
 
@@ -56,6 +62,22 @@ const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
     }
   };
 
+  const handleCertificateUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const certificateUrl = event.target.result;
+        setCertificatePreview(certificateUrl);
+        setFormData(prev => ({
+          ...prev,
+          agmarkCertificateUrl: certificateUrl
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -71,27 +93,39 @@ const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
       description: formData.description,
       imageUrl: formData.photoUrl,
       images: formData.photoUrl ? [formData.photoUrl] : product.images,
-      unit: formData.unit
+      unit: formData.unit,
+      agmarkCertificateUrl: formData.agmarkCertificateUrl,
+      agmarkCertificateNumber: formData.agmarkCertificateNumber
     };
 
     // Try to save to backend database first
     try {
+      const updateData = {
+        title: updatedProduct.title,
+        description: updatedProduct.description,
+        price: updatedProduct.price,
+        stock: updatedProduct.stock,
+        unit: updatedProduct.unit,
+        grade: updatedProduct.grade,
+        harvestDate: updatedProduct.harvestDate,
+        images: updatedProduct.images
+      };
+
+      // Add AGMARK certificate data if provided
+      if (formData.agmarkCertificateUrl) {
+        updateData.agmarkCertificateUrl = formData.agmarkCertificateUrl;
+        updateData.agmarkCertificateNumber = formData.agmarkCertificateNumber;
+        updateData.agmarkGrade = updatedProduct.grade;
+        updateData.agmarkVerificationStatus = 'pending'; // Reset to pending when certificate is updated
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${product._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          title: updatedProduct.title,
-          description: updatedProduct.description,
-          price: updatedProduct.price,
-          stock: updatedProduct.stock,
-          unit: updatedProduct.unit,
-          grade: updatedProduct.grade,
-          harvestDate: updatedProduct.harvestDate,
-          images: updatedProduct.images
-        })
+        body: JSON.stringify(updateData)
       });
 
       if (response.ok) {
@@ -239,6 +273,104 @@ const EditProductModal = ({ product, isOpen, onClose, onSave, userId }) => {
                   <option value="B (Fair)">B (Fair)</option>
                   <option value="C (Below Average)">C (Below Average)</option>
                 </select>
+              </div>
+
+              {/* AGMARK Certificate Section */}
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  AGMARK Certification
+                  {product?.agmarkVerificationStatus === 'rejected' && (
+                    <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">
+                      Previously Rejected - Upload New Certificate
+                    </span>
+                  )}
+                </h3>
+                
+                {product?.agmarkRejectionReason && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-700">
+                      <strong>Rejection Reason:</strong> {product.agmarkRejectionReason}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {/* Certificate Number */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      AGMARK Certificate Number
+                    </label>
+                    <input
+                      type="text"
+                      name="agmarkCertificateNumber"
+                      value={formData.agmarkCertificateNumber}
+                      onChange={handleInputChange}
+                      placeholder="Enter certificate number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+
+                  {/* Certificate Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      AGMARK Certificate Document
+                    </label>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        name="agmarkCertificateUrl"
+                        value={formData.agmarkCertificateUrl}
+                        onChange={handleInputChange}
+                        placeholder="https://example.com/certificate.pdf or upload below"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                      
+                      {/* Or Upload Certificate */}
+                      <div className="text-center">
+                        <p className="text-sm text-gray-500 mb-2">Or upload certificate:</p>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={handleCertificateUpload}
+                          className="hidden"
+                          id="certificate-upload"
+                        />
+                        <label htmlFor="certificate-upload" className="cursor-pointer">
+                          <div className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <Upload className="h-4 w-4 mr-2" />
+                            Choose Certificate File
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* Certificate Preview */}
+                      {certificatePreview && (
+                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-sm text-green-700 font-medium mb-2">✓ Certificate uploaded</p>
+                          {certificatePreview.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                            <img
+                              src={certificatePreview}
+                              alt="Certificate preview"
+                              className="w-full h-48 object-contain rounded border bg-white"
+                            />
+                          ) : (
+                            <p className="text-sm text-gray-600">
+                              Certificate file ready for upload
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {!certificatePreview && product?.agmarkCertificateUrl && (
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <p className="text-sm text-blue-700">
+                            Current certificate on file - Upload new one to replace
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Description */}

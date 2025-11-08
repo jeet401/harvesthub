@@ -86,7 +86,7 @@ const Chat = () => {
     if (!user) return;
 
     const newSocket = io(SOCKET_URL, {
-      auth: { userId: user.id || user.sub || user.email, role: user.role }
+      auth: { userId: user?.id || user?.sub || user?.email, role: user?.role }
     });
 
     newSocket.on('connect', () => {
@@ -314,7 +314,7 @@ const Chat = () => {
   };
 
   const getOtherParticipant = (conversation) => {
-    return conversation.participants.find(p => p.userId._id !== user.id);
+    return conversation.participants.find(p => p.userId._id !== user?.id);
   };
 
   if (loading) {
@@ -432,7 +432,7 @@ const Chat = () => {
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
               {messages.map((message) => {
-                const isOwn = message.senderId._id === user.id;
+                const isOwn = message.senderId._id === user?.id;
                 return (
                   <div key={message._id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg transition-colors duration-300 ${
