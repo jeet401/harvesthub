@@ -1,10 +1,27 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { signAccessToken, signRefreshToken, setAuthCookies } = require('../utils/jwt');
 const { authRequired } = require('../middleware/auth');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
+
+// Cookie options for production
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: '/'
+};
+
+// JWT utility functions
+const signAccessToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET || 'change_me_in_prod', { expiresIn: '15m' });
+};
+
+const signRefreshToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET || 'change_me_too', { expiresIn: '7d' });
+};
 
 router.post('/signup', async (req, res) => {
   try {
@@ -26,7 +43,10 @@ router.post('/signup', async (req, res) => {
     
     const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
     const refreshToken = signRefreshToken({ sub: user._id.toString() });
-    setAuthCookies(res, { accessToken, refreshToken });
+    
+    // Set cookies
+    res.cookie('access_token', accessToken, cookieOptions);
+    res.cookie('refresh_token', refreshToken, cookieOptions);
     
     return res.status(201).json({ user: { id: user._id, email: user.email, role: user.role } });
   } catch (err) {
@@ -37,28 +57,44 @@ router.post('/signup', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login attempt:', req.body);
     const { email, password, role } = req.body || {};
     if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
     
+    console.log('Finding user with email:', email);
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) {
+      console.log('User not found for email:', email);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
     
     // Optional: Verify the role matches if provided
     if (role && user.role !== role) {
+      console.log('Role mismatch. Expected:', role, 'Actual:', user.role);
       return res.status(401).json({ message: `This account is not registered as ${role}` });
     }
     
+    console.log('Comparing password...');
     const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!ok) {
+      console.log('Password comparison failed');
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
     
+    console.log('Generating tokens...');
     const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role });
     const refreshToken = signRefreshToken({ sub: user._id.toString() });
-    setAuthCookies(res, { accessToken, refreshToken });
     
+    console.log('Setting cookies...');
+    // Set cookies
+    res.cookie('access_token', accessToken, cookieOptions);
+    res.cookie('refresh_token', refreshToken, cookieOptions);
+    
+    console.log('Login successful for user:', user.email);
     return res.json({ user: { id: user._id, email: user.email, role: user.role } });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Login failed' });
+    console.error('Login error details:', err);
+    return res.status(500).json({ message: 'Login failed', error: err.message });
   }
 });
 
@@ -73,7 +109,11 @@ router.post('/refresh', async (req, res) => {
     if (!user) return res.status(401).json({ message: 'User not found' });
     
     const accessToken = signAccessToken({ sub: payload.sub, role: user.role });
-    setAuthCookies(res, { accessToken, refreshToken: token });
+    
+    // Set cookies
+    res.cookie('access_token', accessToken, cookieOptions);
+    res.cookie('refresh_token', token, cookieOptions);
+    
     return res.json({ 
       ok: true, 
       user: { id: user._id, email: user.email, role: user.role }

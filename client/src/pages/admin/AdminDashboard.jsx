@@ -18,6 +18,7 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [connectionStatus, setConnectionStatus] = useState('checking') // 'checking', 'connected', 'disconnected'
 
   useEffect(() => {
     // Verify user is admin
@@ -48,7 +49,15 @@ export default function AdminDashboard() {
           setError('Authentication failed. Please login as admin.')
           throw new Error('Unauthorized')
         }
-        throw new Error(`HTTP ${response.status}`)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        console.error('Non-JSON response received:', text.substring(0, 200))
+        throw new Error('Server returned HTML instead of JSON. Please check server logs.')
       }
 
       const data = await response.json()
@@ -61,9 +70,24 @@ export default function AdminDashboard() {
         pendingVerifications: data.products?.pending || 0,
         pendingAGMARK: data.products?.pendingAGMARK || 0
       })
+      setConnectionStatus('connected')
     } catch (error) {
       console.error('Admin dashboard fetch error:', error)
-      setError(error.message)
+      
+      // Provide more specific error messages
+      let errorMessage = error.message
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        errorMessage = 'Cannot connect to server. Please check if the server is running on port 3000.'
+        setConnectionStatus('disconnected')
+      } else if (error.message.includes('Unexpected token')) {
+        errorMessage = 'Server returned invalid JSON. This usually means an authentication or server error.'
+        setConnectionStatus('disconnected')
+      } else {
+        setConnectionStatus('disconnected')
+      }
+      
+      setError(errorMessage)
+      
       // Set zeros on error
       setStats({
         totalUsers: 0,
@@ -88,14 +112,28 @@ export default function AdminDashboard() {
       })
 
       if (response.ok) {
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text()
+          console.error('Non-JSON response for recent activity:', text.substring(0, 200))
+          return
+        }
+
         const data = await response.json()
         console.log('Recent activities:', data)
         setRecentActivities(data.activities || [])
       } else {
-        console.error('Failed to fetch recent activity:', response.status)
+        console.error('Failed to fetch recent activity:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Failed to fetch recent activity:', error)
+      
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        console.error('Connection error: Cannot reach server for recent activity')
+      } else if (error.message.includes('Unexpected token')) {
+        console.error('JSON parsing error: Server returned HTML instead of JSON for recent activity')
+      }
     }
   }
 
@@ -195,7 +233,26 @@ export default function AdminDashboard() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+              connectionStatus === 'connected' 
+                ? 'bg-green-100 text-green-700' 
+                : connectionStatus === 'disconnected'
+                ? 'bg-red-100 text-red-700'
+                : 'bg-yellow-100 text-yellow-700'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                connectionStatus === 'connected' 
+                  ? 'bg-green-500' 
+                  : connectionStatus === 'disconnected'
+                  ? 'bg-red-500'
+                  : 'bg-yellow-500'
+              }`} />
+              {connectionStatus === 'connected' ? 'Connected' : 
+               connectionStatus === 'disconnected' ? 'Disconnected' : 'Connecting...'}
+            </div>
+          </div>
           <p className="text-muted-foreground mt-2">
             Platform Overview & Management {user?.email && `• Logged in as: ${user.email}`}
           </p>
@@ -216,12 +273,22 @@ export default function AdminDashboard() {
       {error && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-5 h-5" />
-              <div>
-                <p className="font-semibold">Error loading dashboard</p>
-                <p className="text-sm">{error}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <div>
+                  <p className="font-semibold">Error loading dashboard</p>
+                  <p className="text-sm">{error}</p>
+                </div>
               </div>
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                size="sm"
+                className="border-red-300 text-red-700 hover:bg-red-100"
+              >
+                Retry
+              </Button>
             </div>
           </CardContent>
         </Card>

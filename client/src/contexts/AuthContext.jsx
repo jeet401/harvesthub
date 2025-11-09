@@ -46,9 +46,19 @@ export function AuthProvider({ children }) {
       const response = await api.refresh();
       if (response && response.user) {
         setUser(response.user);
+      } else {
+        setUser(null);
       }
     } catch (error) {
-      console.log('No valid auth token found');
+      // Handle different types of errors
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        console.error('Connection error during auth check:', error.message);
+      } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        console.log('No valid auth token found');
+      } else {
+        console.error('Auth check error:', error.message);
+      }
+      
       // Clear any old localStorage data
       localStorage.removeItem('demoUser');
       setUser(null);

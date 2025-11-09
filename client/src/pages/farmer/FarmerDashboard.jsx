@@ -10,8 +10,20 @@ import MagicCard from '../../components/MagicCard';
 import NotificationBell from '../../components/NotificationBell';
 
 const FarmerDashboard = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
+
+  // Check if user is authenticated and is a farmer
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth/login')
+      return
+    }
+    if (!authLoading && user && user.role !== 'farmer') {
+      navigate(`/${user.role}/dashboard`)
+      return
+    }
+  }, [user, authLoading, navigate])
   const [crops, setCrops] = useState([]);
   const [stats, setStats] = useState({
     totalCrops: 0,
@@ -132,6 +144,26 @@ const FarmerDashboard = () => {
       alert('Error updating product');
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 bg-background min-h-screen transition-colors duration-300">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-foreground">Checking authentication...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8 bg-background min-h-screen transition-colors duration-300">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-foreground">Redirecting to login...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -485,7 +517,7 @@ const FarmerDashboard = () => {
             setSelectedProduct(null);
           }}
           onSave={handleSaveProduct}
-          userId={user.id}
+          userId={user?.id}
         />
       </div>
     </MagicBento>
