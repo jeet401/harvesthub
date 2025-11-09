@@ -690,8 +690,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Jeet Gandhi** - *Initial work* - [@jeet401](https://github.com/jeet401)
-
+- **Jeet Gandhi** - *Initial work and Backend* - [@jeet401](https://github.com/jeet401)
+- **Heet Mistry** - *Design and Frontend* - [@Heet146](https://github.com/Heet146)
+- **Jatin Vora** - *Database Connection and Frontend* - [@Jatinvora11](https://github.com/Jatinvora11)
 ---
 
 ## 🙏 Acknowledgments
