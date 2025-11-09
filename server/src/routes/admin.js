@@ -155,8 +155,18 @@ router.get('/products', adminRequired, async (req, res) => {
     const { status, category, search, page = 1, limit = 20 } = req.query;
     
     const query = {};
-    if (status) query.status = status;
-    if (category) query.categoryId = category;
+    
+    // Exclude ALL products with pending AGMARK verification status
+    // They should only appear in "Pending AGMARK Verifications" tab
+    // This includes products with or without certificate URL
+    query.agmarkVerificationStatus = { $ne: 'pending' };
+    
+    if (status) {
+      query.status = status;
+    }
+    if (category) {
+      query.categoryId = category;
+    }
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -164,7 +174,7 @@ router.get('/products', adminRequired, async (req, res) => {
       ];
     }
 
-    console.log('Product query:', query);
+    console.log('Product query:', JSON.stringify(query, null, 2));
 
     const products = await Product.find(query)
       .populate('sellerId', 'email role')
@@ -192,8 +202,9 @@ router.get('/products', adminRequired, async (req, res) => {
 // Get products pending AGMARK verification
 router.get('/products/agmark/pending', adminRequired, async (req, res) => {
   try {
+    // Show ALL products with pending AGMARK verification status
+    // This includes products with or without certificate URL uploaded
     const products = await Product.find({
-      agmarkCertificateUrl: { $exists: true, $ne: null },
       agmarkVerificationStatus: 'pending'
     })
       .populate('sellerId', 'email role name')

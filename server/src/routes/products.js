@@ -146,17 +146,18 @@ router.post('/', authRequired, async (req, res) => {
       location,
       harvestDate,
       expiryDate,
-      status: 'active' // Default to active so buyers can see products immediately
+      status: 'pending' // Default to pending - products need AGMARK verification to be listed
     };
 
-    // If AGMARK certificate provided, set verification status to pending but keep product active
+    // If AGMARK certificate provided, set verification status to pending
+    // Product will be activated only after admin verifies AGMARK certificate
     if (agmarkCertificateUrl) {
       productData.agmarkCertificateUrl = agmarkCertificateUrl;
       productData.agmarkCertificateNumber = agmarkCertificateNumber;
       productData.agmarkGrade = agmarkGrade || 'Not Graded';
       productData.agmarkVerificationStatus = 'pending';
       productData.agmarkCertified = false; // Admin needs to verify first
-      // Product stays active, but AGMARK certification is pending
+      // Product stays pending until AGMARK is verified
     }
 
     const product = new Product(productData);
